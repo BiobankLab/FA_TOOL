@@ -45,7 +45,7 @@ extractNames:
   
   remContigs:
   
-usage: facuter4.py remContigs [-h] --list LIST -o OUTPUT [--log LOG]
+usage: fatool.py remContigs [-h] --list LIST -o OUTPUT [--log LOG]
 
   optional arguments:
   -h, --help            show this help message and exit
