@@ -3,6 +3,7 @@
 import sys
 import argparse
 import re
+import datetime
 
 
 def main():
@@ -11,31 +12,40 @@ def main():
 
     subparsers = parser.add_subparsers(title='facutter commands', help='each has own params, for more details use: command -h')
 
-    sub_cut = subparsers.add_parser('cut')
+    sub_cut = subparsers.add_parser('cut', help='split supplied sequence into smaller parts, according to given params')
     sub_cut.add_argument('-r', '--range', help='cutted sequence length', type=int, required=True)
     sub_cut.add_argument('-o', '--output', help='output file default: output.fa', type=argparse.FileType('w'), default='output.fa')
     sub_cut.add_argument('-s', '--step', help='step length default: 1', type=int, default=1)
     sub_cut.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
     sub_cut.set_defaults(func=cut_fa)
 
-    sub_en = subparsers.add_parser('extractNames')
+    sub_en = subparsers.add_parser('extractNames', help='extracting contigs names only')
     sub_en.add_argument('-o', '--output', help='output file if not supplied stdout', type=argparse.FileType('w'))
     # sub_en.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
     sub_en.set_defaults(func=extract_names)
 
-    sub_ec = subparsers.add_parser('extractContigs')
+    sub_ec = subparsers.add_parser('extractContigs', help='extracting contigs specified in file (output in new file)')
     sub_ec.add_argument('--list', help='file containing list of contigs one contig per line', type=argparse.FileType('r'), required=True)
     sub_ec.add_argument('-o', '--output', help='output file; if --multifile is set output directory', type=str, required=True)
     # sub_ec.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
     sub_ec.add_argument('--multifile', help='if this flag is set each contig will be saved in separate file', action='store_true')
     sub_ec.set_defaults(func=extract_contigs)
 
-    sub_rc = subparsers.add_parser('remContigs')
+    sub_rc = subparsers.add_parser('remContigs', help='removing contigs specified in file (output in new file)')
     sub_rc.add_argument('--list', help='file containing list of contigs one contig per line', type=argparse.FileType('r'), required=True)
     sub_rc.add_argument('-o', '--output', help='output file if not supplied stdout', type=str, required=True)
     # sub_rc.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
     sub_rc.set_defaults(func=remove_contigs)
-
+    
+    sub_jc = subparsers.add_parser('join', help='joining two or more files, yet not verifing duplicates')
+    sub_jc.add_argument('-o', '--output', help='output file if not supplied stdout', type=argparse.FileType('w'), required=True)
+    sub_jc.add_argument('--files', help='files to be joined', nargs='*', type=argparse.FileType('r'))
+    sub_jc.set_defaults(func=join)
+    
+    sub_sc = subparsers.add_parser('split', help='each cotig saved into separate file')
+    sub_sc.add_argument('-d', '--outputDir', help='output directory where splited contigs will be saved', type=str, required=True)
+    sub_sc.set_defaults(func=split_contigs)
+    
     parser.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
     parser.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
 
@@ -46,6 +56,15 @@ def main():
 def make_log(content, lfile):
     with lfile as f:
         f.write(content)
+
+
+# function prepares pattern for contig search
+def make_pattern(r):
+    if re.match('^>', r.strip()):
+        pattern = '('+re.escape(r.strip())+'\n[A-Za-z\n]*)[\Z>]?'
+    else:
+        pattern = '(> '+re.escape(r.strip())+'\n[A-Za-z\n]*|>'+r.strip()+'\n[A-Za-z\n]*)[\Z>]?'
+    return pattern
 
 
 def cut_fa(args):
@@ -66,14 +85,11 @@ def cut_fa(args):
     with output as o:
         coe = len(fa)  # end of fa position
         i = 0
-        # N = step*8000
 
         while i + split_range <= coe:
             # while curent position + length of frag is less or equal postion of the last char in file.
             o.write('> frag ' + str(i + 1) + ' : ' + str(i + split_range) + '\n' + str(fa[i:i + split_range]) + '\n')
             i = i + step
-            # print dot every N split to show that script does not heng.
-            # if(i%N == 0): sys.stdout.write('.')
 
 
 def extract_names(args):
@@ -94,6 +110,13 @@ def extract_names(args):
                 if pat.match(r):
                     o.write(r)
 
+def make_file_name(r, suffix):
+    if len(suffix) > 0:
+        name = re.sub('[>\*\\\?\<\/]', '', r.strip())
+        return name+'.'+suffix
+    else:
+        return re.sub('[>\*\\\?\<\/]', '', r.strip())
+
 
 def extract_contigs(args):
     # default all extracted contigs in one file
@@ -101,6 +124,7 @@ def extract_contigs(args):
     fafile = args.fafile
     elist = args.list
     log = args.log
+    log_content = '\nfatools extractContigs\tstarted:\t'+str(datetime.datetime.now())+'\t'
 
     # counters: extracted contigs and list items
     excounter = lcounter = 0
@@ -113,19 +137,15 @@ def extract_contigs(args):
         with elist as cntgs, fafile as f:
             content = f.read()
             for r in cntgs:
+                #print r
                 lcounter = lcounter + 1
                 # check if list item is with '>' important to create pattern.
-                if re.match('^>', r.strip()):
-                    pattern = '('+re.escape(r.strip())+'\n[A-Za-z\n]*)>'
-                else:
-                    pattern = '(> '+re.escape(r.strip())+'\n[A-Za-z\n]*|>'+r.strip()+'\n[A-Za-z\n]*)>'
-
-                m = re.search(pattern, content)
+                
+                m = re.search(make_pattern(r), content)
 
                 if m:
                     excounter = excounter + 1
-                    opt = re.sub('[>\*\\\?\<\/]', '', r.strip())
-                    with open(output+'/'+opt+'.fa', 'w') as o:
+                    with open(output+'/'+make_file_name(r,'fa'), 'w') as o:
                         o.write(m.group(1))
                 else:
                     # log_content = log_content + 'contig not found: ' + r
@@ -138,12 +158,8 @@ def extract_contigs(args):
             for r in cntgs:
                 lcounter = lcounter + 1
                 # check if list item is with '>' important to create pattern.
-                if re.match('^>', r.strip()):
-                    pattern = '('+re.escape(r.strip())+'\n[A-Za-z\n]*)>'
-                else:
-                    pattern = '(> '+re.escape(r.strip())+'\n[A-Za-z\n]*|>'+r.strip()+'\n[A-Za-z\n]*)>'
 
-                m = re.search(pattern, content)
+                m = re.search(make_pattern(r), content)
 
                 if m:
                     excounter = excounter + 1
@@ -153,9 +169,12 @@ def extract_contigs(args):
                     log_not_found = 'contig not found: ' + r
 
         if(log):
-            log_content = '\nfatools\nlist items:\t'+str(lcounter)+'\nextracted contigs:\t'+str(excounter)+'\n'
+            log_content = log_content + 'stoped:\t'+str(datetime.datetime.now())+'\n'
+            if args.operator:
+                log_content = log_content + 'operator:\t'+args.operator+'\n'
+            log_content = log_content + '='*15+'\nlist items:\t'+str(lcounter)+'\nextracted contigs:\t'+str(excounter)+'\n'
             if log_not_found:
-                log_content = log_content + '\nContigs not found:\n============================================\n'+log_not_found
+                log_content = log_content + '\nContigs not found:\n'+'='*15+'\n'+log_not_found
             make_log(log_content, log)
         else:
             print 'list items: '+str(lcounter)+'; extracted contigs: '+str(excounter)
@@ -174,24 +193,43 @@ def remove_contigs(args):
         content = f.read()
         for r in cntgs:
             lcounter = lcounter + 1
-            # check if list item is with '>' important to create pattern.
-            if re.match('^>', r.strip()):
-                pattern = '('+re.escape(r.strip())+'\n[A-Za-z\n]*)>'
-            else:
-                pattern = '(> '+re.escape(r.strip())+'\n[A-Za-z\n]*|>'+r.strip()+'\n[A-Za-z\n]*)>'
 
-            if re.match(pattern, content):
+            if re.match(make_pattern, content):
                 rem_counter = rem_counter + 1
-            content = re.sub(pattern, '>', content)
-        o.write(content)
+            content = re.sub(make_pattern, '>', content)
+        #rstrip removes last > left after removing last contig
+        o.write(content.rstrip('>'))
     if(log):
         make_log('fatool - remContigs:\n list items:\t'+str(lcounter)+'\ncontings rmoved:\t'+str(rem_counter), log)
     else:
         print 'list items:\t'+str(lcounter)+'\ncontings rmoved:\t'+str(rem_counter)
 
+def join(args):
+    with args.fafile as f:
+        content = f.read()
+        for r in args.files:
+            with r as j:
+                content = content.rstrip() + '\n' + r.read()
+        with args.output as o:
+            o.write(content)
+        
+    
+
 
 def split_contigs(args):
-    return 1
+    with args.fafile as f:
+        content = f.read()
+        nc = content.split('>')
+        for r in nc[1:]:
+            #print r
+            #print r.split('\n', 1)[0]
+            
+            #ofile = make_file_name(r.split('\n', 1)[0],'fa')
+            #print ofile
+            with open(args.outputDir+'/'+make_file_name(r.split('\n', 1)[0],'fa'), 'w') as o:
+                o.write('>'+r)
+            
+        
 
 
 def statistics(args):

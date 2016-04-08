@@ -1,15 +1,46 @@
-# FA_TOOL
+NAME
+====
+fatool
 
-Command line tool in python. It operates on fa/fasta etc. files. version: 0.0.1
+VERSION
+=======
 
-fatool.py [-h] -f FAFILE  {cut,extractNames,extractContigs,remContigs}
+0.1.0
+
+LICENSE
+=======
+
+INTRODUCTION
+============
+
+Command line tool in python 2.7. It operates on fa/fasta/etc. files. version: 0.1.0
+
+
+PREREQUISITES
+=============
+PYTHON 2.7
+
+COMMAND LINE
+============
+
+usage: fatool.py [-h] -f FAFILE [--operator OPERATOR] [--log LOG]
+                 {cut,extractNames,extractContigs,remContigs,join,split} ...
 
 optional arguments:
   -h, --help            show this help message and exit
-  -f FAFILE, --fafile FAFILE	file to be cut usualy *.fa
+  -f FAFILE, --fafile   file to be cut usualy *.fa
+  --operator OPERATOR   user who have fired script it will be noted in log
+  --log LOG             log file if not supplied stdout
 
-fatool commands:
-  {cut,extractNames,extractContigs,remContigs} each has own params, for more details use: command -h
+facutter commands:
+  {cut,extractNames,extractContigs,remContigs,join,split} each has own params
+  
+    cut                 split supplied sequence into smaller parts, according to given params
+    extractNames        extracting contigs names only
+    extractContigs      extracting contigs specified in file (output in new file)
+    join                joining two or more files, yet not verifing duplicates
+    remContigs          removing contigs specified in file (output in new file)
+    split               each cotig saved into separate file
   
 cut:
   
@@ -29,7 +60,7 @@ extractContigs:
   optional arguments:
   -h, --help            show this help message and exit
   --list LIST           file containing list of contigs one contig per line
-  -o OUTPUT, --output	output file; if --multifile is set output directory
+  -o OUTPUT, --output	  output file; if --multifile is set output directory
   --log LOG             log file if not supplied stdout
   --multifile           if this flag is set each contig will be saved inseparate file
 
@@ -42,14 +73,30 @@ extractNames:
   -h, --help            show this help message and exit
   -o OUTPUT, --output 	output file if not supplied stdout
   --log LOG             log file if not supplied stdout
+
+join:
+
+  usage: fatool.py join [-h] -o OUTPUT [--files [FILES [FILES ...]]]
+
+  optional arguments:
+  -h, --help                  show this help message and exit
+  -o OUTPUT, --output OUTPUT  output file
+  --files [FILES [FILES ...]] files to be joined
+ 
+remContigs:
   
-  remContigs:
-  
-usage: fatool.py remContigs [-h] --list LIST -o OUTPUT [--log LOG]
+  usage: fatool.py remContigs [-h] --list LIST -o OUTPUT [--log LOG]
 
   optional arguments:
   -h, --help            show this help message and exit
   --list LIST           file containing list of contigs one contig per line
   -o OUTPUT, --output 	output file if not supplied stdout
   --log LOG             log file if not supplied stdout
-  
+
+split:
+
+  usage: fatool.py split [-h] -d OUTPUTDIR
+
+  optional arguments:
+  -h, --help                show this help message and exit
+  -d OUTPUTDIR, --outputDir output directory where splited contigs will be saved
