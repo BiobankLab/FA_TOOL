@@ -4,50 +4,78 @@ import sys
 import argparse
 import re
 import datetime
+from string import maketrans
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
+    #parser.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
 
     subparsers = parser.add_subparsers(title='facutter commands', help='each has own params, for more details use: command -h')
 
     sub_cut = subparsers.add_parser('cut', help='split supplied sequence into smaller parts, according to given params')
+    sub_cut.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_cut.add_argument('-r', '--range', help='cutted sequence length', type=int, required=True)
     sub_cut.add_argument('-o', '--output', help='output file default: output.fa', type=argparse.FileType('w'), default='output.fa')
     sub_cut.add_argument('-s', '--step', help='step length default: 1', type=int, default=1)
     sub_cut.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_cut.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
     sub_cut.set_defaults(func=cut_fa)
 
     sub_en = subparsers.add_parser('extractNames', help='extracting contigs names only')
+    sub_en.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_en.add_argument('-o', '--output', help='output file if not supplied stdout', type=argparse.FileType('w'))
-    # sub_en.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_en.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_en.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
     sub_en.set_defaults(func=extract_names)
 
     sub_ec = subparsers.add_parser('extractContigs', help='extracting contigs specified in file (output in new file)')
+    sub_ec.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_ec.add_argument('--list', help='file containing list of contigs one contig per line', type=argparse.FileType('r'), required=True)
     sub_ec.add_argument('-o', '--output', help='output file; if --multifile is set output directory', type=str, required=True)
-    # sub_ec.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_ec.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_ec.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
     sub_ec.add_argument('--multifile', help='if this flag is set each contig will be saved in separate file', action='store_true')
     sub_ec.set_defaults(func=extract_contigs)
 
     sub_rc = subparsers.add_parser('remContigs', help='removing contigs specified in file (output in new file)')
+    sub_rc.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_rc.add_argument('--list', help='file containing list of contigs one contig per line', type=argparse.FileType('r'), required=True)
     sub_rc.add_argument('-o', '--output', help='output file if not supplied stdout', type=str, required=True)
-    # sub_rc.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_rc.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_rc.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
     sub_rc.set_defaults(func=remove_contigs)
     
     sub_jc = subparsers.add_parser('join', help='joining two or more files, yet not verifing duplicates')
+    sub_jc.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_jc.add_argument('-o', '--output', help='output file if not supplied stdout', type=argparse.FileType('w'), required=True)
     sub_jc.add_argument('--files', help='files to be joined', nargs='*', type=argparse.FileType('r'))
+    sub_jc.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_jc.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
     sub_jc.set_defaults(func=join)
     
     sub_sc = subparsers.add_parser('split', help='each cotig saved into separate file')
+    sub_sc.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_sc.add_argument('-d', '--outputDir', help='output directory where splited contigs will be saved', type=str, required=True)
+    sub_sc.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_sc.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
     sub_sc.set_defaults(func=split_contigs)
     
-    parser.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
-    parser.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_r = subparsers.add_parser('reverse', help='reverse all sequences in file')
+    sub_r.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
+    sub_r.add_argument('-o', '--output', help='output file; if --multifile is set output directory', type=argparse.FileType('w'), required=True)
+    sub_r.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_r.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
+    sub_r.set_defaults(func=reverse)
+    
+    sub_v  = subparsers.add_parser('validate', help='validates fa file')
+    sub_v.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
+    sub_v.add_argument('-t', '--type', help='type of sequence 0 - general, 1 DNA, 2 - amino', type=int, required=True)
+    sub_v.add_argument('--detailed', help='set if you want to see detaild validation info', action='store_true')
+    sub_v.set_defaults(func=validate)
+    
+    #parser.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
+    #parser.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
 
     args = parser.parse_args()
     args.func(args)
@@ -221,20 +249,70 @@ def split_contigs(args):
         content = f.read()
         nc = content.split('>')
         for r in nc[1:]:
-            #print r
-            #print r.split('\n', 1)[0]
-            
-            #ofile = make_file_name(r.split('\n', 1)[0],'fa')
             #print ofile
             with open(args.outputDir+'/'+make_file_name(r.split('\n', 1)[0],'fa'), 'w') as o:
                 o.write('>'+r)
             
         
 
-
 def statistics(args):
     return 1
 
+
+def validate(args):
+    pattern = re.compile('[^ACGNTUBDHKMRSVWY\-\nacgntubdhkmrsvwy]')
+    #dna
+    #amino
+    not_valid = 0
+    missmatches = {}
+    with args.fafile as f:
+        content = f.read()
+        if not re.search('^>', content):
+            print 'Invalid fa file no ">" at begining'
+            exit(0)
+
+        nc = content.split('>')
+        nv_list = {}
+        m = None
+        log_info = ''
+        # detailed flag show more info
+        if(args.detailed):
+            for r in nc[1:]:
+                # removing first line of sequence it contains name of contig
+                nr = re.sub('^>.*\n','','>'+r)
+                m = pattern.finditer(nr)
+                if m:
+                    not_valid = 1
+                    for i in m:
+                        log_info += 'Contig:\t'+r.split('\n', 1)[0]+'\tposition:\t'+str(i.start())+'\tvalue:\t'+str(i.group())+'\n'
+                    #nv_list = 
+                    #break
+        else:
+            for r in nc[1:]:
+                nr = re.sub('^>.*\n','','>'+r)
+                if pattern.search(nr):
+                    not_valid = 1
+                    break
+    if not_valid == 0:
+        print 'File is valid fa file'
+    else:
+        print 'Invalid fa file'
+        if log_info:
+            print log_info
+
+def reverse(args):
+    with args.fafile as f, args.output as o:
+        content = f.read()
+        nc = content.split('>')
+        for r in nc[1:]:#need to change
+            nr = re.sub('^>.*\n','','>'+r)
+            # removing new lines to output with 80 chars per line
+            nr = re.sub('\n', '', nr)
+            rev = nr[::-1]
+            rev = rev.translate(maketrans('ACTGactg', 'TGACtgac'))
+            rev = re.sub("(.{80})",'\\1\n', rev, 0)
+            o.write('>rev_'+r.split('\n', 1)[0]+'\n'+rev)
+            
 
 if __name__ == '__main__':
     exit(main())
