@@ -277,7 +277,7 @@ def validate(args):
         log_info = ''
         # detailed flag show more info
         if(args.detailed):
-            for r in nc[1:]:
+            for r in nc[1:]: # first elem is empty
                 # removing first line of sequence it contains name of contig
                 nr = re.sub('^>.*\n','','>'+r)
                 m = pattern.finditer(nr)
@@ -288,7 +288,7 @@ def validate(args):
                     #nv_list = 
                     #break
         else:
-            for r in nc[1:]:
+            for r in nc[1:]: # first elem is empty
                 nr = re.sub('^>.*\n','','>'+r)
                 if pattern.search(nr):
                     not_valid = 1
@@ -304,12 +304,14 @@ def reverse(args):
     with args.fafile as f, args.output as o:
         content = f.read()
         nc = content.split('>')
-        for r in nc[1:]:#need to change
+        for r in nc[1:]: # first elem is empty
+            # removing first line
             nr = re.sub('^>.*\n','','>'+r)
             # removing new lines to output with 80 chars per line
             nr = re.sub('\n', '', nr)
             rev = nr[::-1]
             rev = rev.translate(maketrans('ACTGactg', 'TGACtgac'))
+            # creating 80 chars lines
             rev = re.sub("(.{80})",'\\1\n', rev, 0)
             o.write('>rev_'+r.split('\n', 1)[0]+'\n'+rev)
             
