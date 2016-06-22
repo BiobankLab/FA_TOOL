@@ -4,6 +4,7 @@ from string import maketrans
 from collections import Counter
 import fuzzy
 import re
+import logging
 
 
 class Sequence(object):
@@ -133,7 +134,7 @@ class Sequence(object):
         log_info = []
         # if not allowed chars found
         if m:
-            # it may be 60 xxxxxxxxxx xxx.... format
+            # it may be 61 xxxxxxxxxx xxx.... format
             if re.search('(\d+)', seq):
                 seq_array = seq.split('\n')
                 new_array = []  # array to store new sequence after cleaning and transformation
@@ -146,7 +147,7 @@ class Sequence(object):
                 if end_of_seq_array > 1:
                     line_length = int(new_array[1][0])-int(new_array[0][0])
 
-                # validate ecah block (between " " [space]) of given sequence
+                # validate each block (between " " [space]) of given sequence
                 i = 0
                 while i < end_of_seq_array:
                     # digit on begining of line was not found - error
@@ -251,7 +252,7 @@ class Sequence(object):
         frame2 = []
         frame3 = []
         
-        # creating pattern to find start codons
+        # creating pattern (from dict) to find start codons
         for r in start:
             p +=  r+'|'
         p = '('+p.rstrip('|')+')'
@@ -331,30 +332,35 @@ class Sequence(object):
         self.normalize()
         return fuzzy.find_all_motifs(motif, self.seq, missmatch_level, hs_start_pos = 0)
         
-    def find_aprox_primers(self, start, stop, missmatch_level = 0, len_min = 50, len_max = 10000):
+    def find_primers(self, start, stop, mode, len_min = 50, len_max = 10000):
+        return self.find_aprox_primers(start, stop, mode, 0, len_min, len_max)
+        
+    
+    def find_aprox_primers(self, start, stop, mode, missmatch_level = 0, len_min = 50, len_max = 10000):
         #start 5'->3'
         # add missmatch_level condition if 50%>
-        rev = stop[::-1]
-        new_stop = rev.translate(maketrans('ACTGactg', 'TGACtgac'))
+        logger = logging.getLogger(__name__)
+        #logger.setLevel(logging.DEBUG)
+        logger.debug('given args: start:'+start+' stop: '+stop+' mode: '+mode+' mm level: '+str(missmatch_level)+' len_min: '+str(len_min)+' len_max: '+str(len_max))
+        #logger.debug('sequence: '+self.seq)
+        if mode.upper() == 'FR':
+            rev = stop[::-1]
+            stop = rev.translate(maketrans('ACTGactg', 'TGACtgac'))
+        elif mode.upper() != 'FF':
+            raise ('Unexpected mode: '+str(mode)+' expected values [FR|FF]')
+            
         r_list = []
         self.normalize()
-        #print '\nAfter normailzation'
-        #print self.seq
         
         res = fuzzy.find_all_motifs_in_aprox_range(start, stop, self.seq, missmatch_level, 0, len_min, len_max)
         if res:
             r_list.extend(res)
         
-        rev = start[::-1]
-        new_start = rev.translate(maketrans('ACTGactg', 'TGACtgac'))
-        #print 'new_seq in sequence\n'
-        #print new_seq.seq
-        res = fuzzy.find_all_motifs_in_aprox_range(new_start, stop, self.seq, missmatch_level, 0, len_min, len_max)
+        res = fuzzy.find_all_motifs_in_aprox_range(start, stop, self.reverse().seq, missmatch_level, 0, len_min, len_max)
         if res:
             r_list.extend(res)
-        print 'Sequence.find_aprox_primers',
-        for s in r_list:
-            print s+'\n'
+            
+        logger.debug(r_list)
         return r_list
         
     def __str__(self):

@@ -2,10 +2,6 @@ NAME
 ====
 fatool
 
-DESCRIPTION
-===========
-
-Tool for analyze and manipulate fasta files
 
 VERSION
 =======
@@ -19,12 +15,17 @@ APACHE 2.0  Specified in LICENSE.md file
 INTRODUCTION
 ============
 
-Command line tool in python 2.7. It operates on fa/fasta/etc. files. version: 0.1.0
+Package and Command line tool in python 2.7. It operates on fa/fasta/etc. files. version: 0.2.1. To install package use setup.py install.
 
 
 PREREQUISITES
 =============
 PYTHON 2.7
+
+USAGE
+=====
+
+
 
 COMMAND LINE
 ============
@@ -53,7 +54,7 @@ fatool commands:
     cut:
     
 usage: cmdfatool.py cut [-h] -f FAFILE -r RANGE [-o OUTPUT] [-s STEP]
-                        [--log LOG] [--operator OPERATOR]
+                        [--report REPORT] [--operator OPERATOR]
 
 optional arguments:
   -h, --help                    show this help message and exit
@@ -61,51 +62,51 @@ optional arguments:
   -r RANGE, --range RANGE       cutted sequence length
   -o OUTPUT, --output OUTPUT    output file default: output.fa
   -s STEP, --step STEP          step length default: 1
-  --log LOG                     log file if not supplied stdout
+  --report REPORT               log file if not supplied stdout
   --operator OPERATOR           user who have fired script it will be noted in log
   
   
     extractNames:
   
-usage: cmdfatool.py extractNames [-h] -f FAFILE [-o OUTPUT] [--log LOG]
+usage: cmdfatool.py extractNames [-h] -f FAFILE [-o OUTPUT] [--report REPORT]
                                  [--operator OPERATOR]
 
 optional arguments:
   -h, --help                    show this help message and exit
   -f FAFILE, --fafile FAFILE    file to be cut usualy *.fa
   -o OUTPUT, --output OUTPUT    output file if not supplied stdout
-  --log LOG             log file if not supplied stdout
-  --operator OPERATOR   user who have fired script it will be noted in log
+  --report REPORT               log file if not supplied stdout
+  --operator OPERATOR           user who have fired script it will be noted in log
  
  
     extractContigs:
  
 usage: cmdfatool.py extractContigs [-h] -f FAFILE --list LIST -o OUTPUT
-                                   [--log LOG] [--operator OPERATOR]
+                                   [--report REPORT] [--operator OPERATOR]
                                    [--multifile]
 
 optional arguments:
-  -h, --help            show this help message and exit
+  -h, --help                    show this help message and exit
   -f FAFILE, --fafile FAFILE    file to be cut usualy *.fa
-  --list LIST           file containing list of contigs one contig per line
+  --list LIST                   file containing list of contigs one contig per line
   -o OUTPUT, --output OUTPUT    output file; if --multifile is set output directory
-  --log LOG             log file if not supplied stdout
-  --operator OPERATOR   user who have fired script it will be noted in log
-  --multifile           if this flag is set each contig will be saved in
-                        separate file
+  --report REPORT               log file if not supplied stdout
+  --operator OPERATOR           user who have fired script it will be noted in log
+  --multifile                   if this flag is set each contig will be saved in
+                                separate file
     
     
     remContigs
                         
 usage: cmdfatool.py remContigs [-h] -f FAFILE --list LIST -o OUTPUT
-                               [--log LOG] [--operator OPERATOR]
+                               [--report REPORT] [--operator OPERATOR]
 
 optional arguments:
   -h, --help            show this help message and exit
   -f FAFILE, --fafile FAFILE    file to be cut usualy *.fa
   --list LIST           file containing list of contigs one contig per line
   -o OUTPUT, --output OUTPUT    output file if not supplied stdout
-  --log LOG             log file if not supplied stdout
+  --report REPORT             log file if not supplied stdout
   --operator OPERATOR   user who have fired script it will be noted in log
   
   
@@ -113,7 +114,7 @@ optional arguments:
     
 usage: cmdfatool.py join [-h] -f FAFILE -o OUTPUT
                          [--files [FILES [FILES ...]]] [--overwrite]
-                         [--log LOG] [--operator OPERATOR]
+                         [--report REPORT] [--operator OPERATOR]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -121,33 +122,33 @@ optional arguments:
   -o OUTPUT, --output OUTPUT    output file if not supplied stdout
   --files [FILES [FILES ...]]   files to be joined
   --overwrite           if set owerwrites contigs with same name
-  --log LOG             log file if not supplied stdout
+  --report REPORT             log file if not supplied stdout
   --operator OPERATOR   user who have fired script it will be noted in log
   
   
   split
 
-usage: cmdfatool.py split [-h] -f FAFILE -d OUTPUTDIR [--log LOG]
+usage: cmdfatool.py split [-h] -f FAFILE -d OUTPUTDIR [--report REPORT]
                           [--operator OPERATOR]
 
 optional arguments:
   -h, --help            show this help message and exit
   -f FAFILE, --fafile FAFILE    file to be cut usualy *.fa
   -d OUTPUTDIR, --outputDir OUTPUTDIR   output directory where splited contigs will be saved
-  --log LOG             log file if not supplied stdout
+  --report REPORT             log file if not supplied stdout
   --operator OPERATOR   user who have fired script it will be noted in log
   
   
   reverse
   
-usage: cmdfatool.py reverse [-h] -f FAFILE -o OUTPUT [--log LOG]
+usage: cmdfatool.py reverse [-h] -f FAFILE -o OUTPUT [--report REPORT]
                             [--operator OPERATOR]
 
 optional arguments:
   -h, --help            show this help message and exit
   -f FAFILE, --fafile FAFILE    file to be cut usualy *.fa
   -o OUTPUT, --output OUTPUT    output file; if --multifile is set output directory
-  --log LOG             log file if not supplied stdout
+  --report REPORT             log file if not supplied stdout
   --operator OPERATOR   user who have fired script it will be noted in log  
   
   
@@ -165,11 +166,11 @@ optional arguments:
   
   stats
   
-usage: cmdfatool.py stats [-h] -f FAFILE [--log LOG]
+usage: cmdfatool.py stats [-h] -f FAFILE [--report REPORT]
                           [--operator [OPERATOR [OPERATOR ...]]]
 
 optional arguments:
   -h, --help            show this help message and exit
   -f FAFILE, --fafile FAFILE    file to show statistics usualy *.fa
-  --log LOG             log file if not supplied stdout
+  --report REPORT             log file if not supplied stdout
   --operator [OPERATOR [OPERATOR ...]]  user who have fired script it will be noted in log
