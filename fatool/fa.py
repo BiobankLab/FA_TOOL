@@ -11,7 +11,6 @@ class Fa(object):
         logger = logging.getLogger(__name__)
         
         logger.debug('creating Fa object')
-        logger.info('but info works')
         self.name = name
         self.contigs = []
         self.contigs_idx = {}

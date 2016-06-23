@@ -10,7 +10,7 @@ import logging
 class Sequence(object):
     def __init__(self, name, seq):
         if Sequence.validate_name_string(name):
-            self.name = name.lstrip('>')
+            self.name = name
         else:
             raise NameError('Sequence name have to start with ">"') 
         self.seq = seq
@@ -193,9 +193,35 @@ class Sequence(object):
         contig_end = len(self.seq)  # last position of contig
         contig_list = []  # contig list returning by function
         while i+length <= contig_end:
-            contig_list.append(Sequence('>'+self.name+'_frag_'+str(i + 1)+':'+str(i + length), str(self.seq[i:i+length])))
+            contig_list.append(Sequence(self.name+'_frag_'+str(i + 1)+':'+str(i + length), str(self.seq[i:i+length])))
             i = i+step
         return contig_list
+        
+    def cut_name(self, length, start = 0):
+        self.name = self.name[start:length]
+        print self.name
+        
+    def leave_name_after_marker(self, mark, length = 0, keep_marker = 1):
+        m = re.search(re.escape(mark), self.name)
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.DEBUG)
+        logger.debug(m)
+        logger.debug(keep_marker)
+        if m:
+            # keep original marker or skip it
+            
+            if keep_marker == 1:
+                s = m.start()
+            else:
+                s = m.end()
+            # defined length or return string to end
+            if length > 0:
+                self.name = '>'+self.name[s:s+length].lstrip('>')
+            else:
+                self.name = '>'+self.name[s:].lstrip('>')
+            return 1
+        return 0
+        
 
     def reverse(self):
         '''
@@ -207,7 +233,7 @@ class Sequence(object):
         rev = rev.translate(maketrans('ACTGactg', 'TGACtgac'))
         # creating 80 chars lines
         #rev = re.sub("(.{80})", '\\1\n', rev, 0)
-        return Sequence('>rev_'+self.name, rev)
+        return Sequence('>rev_'+self.name.lstrip('>'), rev)
 
 
     def normalize(self):
@@ -367,7 +393,7 @@ class Sequence(object):
         '''
         creates nicely outputed string
         '''
-        return '>'+self.name+'\n'+re.sub("(.{80})", '\\1\n', self.seq, 0)+'\n'
+        return self.name+'\n'+re.sub("(.{80})", '\\1\n', self.seq, 0)+'\n'
 
 
     def __len__(self):

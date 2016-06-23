@@ -174,3 +174,39 @@ optional arguments:
   -f FAFILE, --fafile FAFILE    file to show statistics usualy *.fa
   --report REPORT             log file if not supplied stdout
   --operator [OPERATOR [OPERATOR ...]]  user who have fired script it will be noted in log
+
+  findPrimer:
+
+usage: cmdfatool.py findPrimer [-h] -f FAFILE --start START --stop STOP --mode
+                               {FF,FR} [--minlen MINLEN] [--maxlen MAXLEN]
+                               [--mml MML] [--report REPORT]
+                               [--operator [OPERATOR [OPERATOR ...]]]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f FAFILE, --fafile FAFILE  
+                        file to show statistics usualy *.fa
+  --start START         strat codon 5'
+  --stop STOP           stop codon 3'
+  --mode {FF,FR}        FF (start forward, stop forward) or FR (start 5' stop 3')
+  --minlen MINLEN       minimum length (detfault 50bp)
+  --maxlen MAXLEN       max length (detfault 1000bp)
+  --mml MML             mismatch level number of allowed missmatches in primers (detfault 0)
+  --report REPORT       report results into file if not supplied stdout
+  --operator [OPERATOR [OPERATOR ...]]
+                        user who have fired script it will be noted in report
+
+
+  cutNameMarker:
+
+
+usage: cmdfatool.py cutNameMarker [-h] -f FAFILE -m MARKER -l LENGTH
+                                  --keepMarker KEEPMARKER [-o OUTPUT]
+
+optional arguments:
+  -h, --help                  show this help message and exit
+  -f FAFILE, --fafile FAFILE  file to show statistics usualy *.fa
+  -m MARKER, --marker MARKER  marker that indicates start of cut
+  -l LENGTH, --length LENGTH  length of cut
+  --keepMarker KEEPMARKER     weather to keep marker or not default 1 (Yes)
+  -o OUTPUT, --output OUTPUT  output file default: output.fa

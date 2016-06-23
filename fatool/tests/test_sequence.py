@@ -12,7 +12,7 @@ class TestSequence(unittest.TestCase):
     def test_setUpSequence(self):
         c = Sequence('>name', 'ACTGactg')
         self.assertTrue( isinstance(c, Sequence) )
-        self.assertEqual(c.name, 'name')
+        self.assertEqual(c.name, '>name')
         self.assertEqual(c.seq, 'ACTGactg')
 
     def test_contig_str(self):
@@ -376,11 +376,32 @@ class TestSequence(unittest.TestCase):
             'TTTAGCACTGATAGCCACTTGATCCACATCGTTAACGGTAATATAGCCAGTCCAATGTGAGG',
         ]
         
-        for r in c.find_aprox_primers('TTTT', 'GGGG', 'FF', 1,60,65):
-            print r
-        
+        #for r in c.find_aprox_primers('TTTT', 'GGGG', 'FF', 1,60,65):
+        #    print r
+       
         self.assertEqual(t_TTTT_GGGG_FF_60_65,  c.find_aprox_primers('TTTT', 'CCCC', 'FR', 1,60,65))
         
+    def test_leave_name_after_marker(self):
+        c = Sequence('>test_something_special_gene=qwerty_ready', 'ACTGTACGGA')
+        self.assertEqual(1, c.leave_name_after_marker('gene=', 20))
+        self.assertEqual('>gene=qwerty_ready', c.name)
+        #self.assertEqual()
+        c2 = Sequence('>test_something_special_gene=qwerty_ready', 'ACTGTACGGA')
+        self.assertEqual(1, c2.leave_name_after_marker('gene=', 11))
+        self.assertEqual('>gene=qwerty', c2.name)
+        c = Sequence('>test_something_special_gene=qwerty_ready', 'ACTGTACGGA')
+        self.assertEqual(1, c.leave_name_after_marker('gene='))
+        self.assertEqual('>gene=qwerty_ready', c.name)
+        c2 = Sequence('>test_something_special_gene=qwerty_ready', 'ACTGTACGGA')
+        self.assertEqual(1, c2.leave_name_after_marker('gene=', 6, 0))
+        self.assertEqual('>qwerty', c2.name)
+        
+    def test_cut_name(self):
+        c = Sequence('>test_something_special_gene=qwerty_ready', 'ACTGTACGGA')
+        c.cut_name(5)
+        self.assertEqual('>test', c.name)
+        c.cut_name(10)
+        self.assertEqual('>test', c.name)
         
     
 if __name__ == "__main__":

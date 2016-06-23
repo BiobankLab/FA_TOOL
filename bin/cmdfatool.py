@@ -88,25 +88,43 @@ def main():
     sub_s.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
     sub_s.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
     sub_s.set_defaults(func=statistics)
-    
-    sub_fm  = subparsers.add_parser('findMotif', help='finding given motif; display motif and its position in contig')
+    '''
+    sub_fm  = subparsers.add_parser('findMotif', help='display motifs position in contig')
     sub_fm.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_fm.add_argument('--mml', help='mismatch level number of allowed missmatches in primers (detfault 0)', type=str, default=0)
     sub_fm.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
     sub_fm.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
     sub_fm.set_defaults(func=find_motif)
-    
+    '''
     sub_fp  = subparsers.add_parser('findPrimer', help='display list of founded primers')
     sub_fp.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_fp.add_argument('--start', help='strat codon 5\'', type=str, required=True)
     sub_fp.add_argument('--stop', help='stop codon 3\'', type=str, required=True)
-    sub_fp.add_argument('--mode', help='FF (start forward, stop forward) or FR (start 5\' stop 3\')', type=str, choices=['FF', 'FR'], required=True)
+    sub_fp.add_argument('--mode', help='FF (start forward, stop forward) or FR (start 5\' stop 3\')', type=str, choices=['FF', 'FR'], default = 'FR', required=True)
     sub_fp.add_argument('--minlen', help='minimum length (detfault 50bp)', type=int, default=50)
     sub_fp.add_argument('--maxlen', help='max length (detfault 1000bp)', type=int, default=1000)
     sub_fp.add_argument('--mml', help='mismatch level number of allowed missmatches in primers (detfault 0)', type=int, default=0)
     sub_fp.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
     sub_fp.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
     sub_fp.set_defaults(func=find_primers)
+    
+    sub_cn = subparsers.add_parser('cutName', help='cuts name from position to given length')
+    sub_cn.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
+    sub_cn.add_argument('--start', help='start of cut', type=int, required=True)
+    sub_cn.add_argument('-l', '--length', help='length of cut', type=int, required=True)
+    sub_cn.set_defaults(func=cut_name)
+    
+    sub_lnam = subparsers.add_parser('cutNameMarker', help='cuts name leaving defined number of chars after begining of marker')
+    sub_lnam.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
+    sub_lnam.add_argument('-m', '--marker', help='marker that indicates start of cut', type=str, required=True)
+    sub_lnam.add_argument('-l', '--length', help='length of cut', type=int, required=True)
+    sub_lnam.add_argument('--keepMarker', help='weather to keep marker or not default 1 (Yes)', type=int, required=True)
+    sub_lnam.add_argument('-o', '--output', help='output file default: output.fa', type=argparse.FileType('w'), default='output.fa')
+    #sub_lnam.add_argument('-d', '--outputDir', help='output directory where multiple contigs will be saved', type=str)
+    sub_lnam.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_lnam.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
+    sub_lnam.set_defaults(func=cut_name_pattern)
+    
     '''
     sub_fap  = subparsers.add_parser('findPrimer', help='show statistics of fa file')
     sub_fap.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
@@ -122,9 +140,7 @@ def main():
     #parser.add_argument('--report', help='log file if not supplied stdout', type=argparse.FileType('w'))
 
     args = parser.parse_args()
-    #if args.version:
-    #    print version
-    #    exit(0)
+    
         
     args.func(args)
     
@@ -366,17 +382,21 @@ def reverse(args):
     fa = Fa.load_from_file(args.fafile)
     fa.reverse()
     fa.write(args.output)
+    rep += '\n\n------------------------------------------------------'
+    rep += '\nFinished:\t'+str(datetime.datetime.now())
     if args.report:
         with args.report as log_file:
             log_file.write(rep)
     else:
         print rep
+        
 
 def find_motif(args):
     print 'not available yet'
     pass
 
 def find_primers(args):
+    rep = str(make_log_header('reverse', args.operator))
     fa = Fa.load_from_file(args.fafile)
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
@@ -386,8 +406,24 @@ def find_primers(args):
         rep += '\n================\n\t\t'+r.name+'\n'
         for q in r.find_aprox_primers(args.start, args.stop, str(args.mode), int(args.mml), args.minlen, args.maxlen):
             rep += q+'\n'
+    rep += '\n\n------------------------------------------------------'
+    rep += '\nFinished:\t'+str(datetime.datetime.now())
+    if args.report:
+        with args.report as log_file:
+            log_file.write(rep)
+    else:
+        print rep
+        
+def cut_name_pattern(args):
+    rep = str(make_log_header('cutNameMarker', args.operator))
+    fa = Fa.load_from_file(args.fafile)
+    for r in fa.contigs:
+        r.leave_name_after_marker(args.marker, args.length, args.keepMarker)
+    fa.write(args.output)
     
-    print rep
+def cut_name(args):
+    pass
+
         
 if __name__ == '__main__':
     exit(main())
