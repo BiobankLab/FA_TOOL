@@ -6,7 +6,7 @@ fatool
 VERSION
 =======
 
-0.2.1
+0.3.1
 
 LICENSE
 =======
@@ -196,7 +196,7 @@ optional arguments:
   --operator [OPERATOR [OPERATOR ...]]
                         user who have fired script it will be noted in report
 
-
+                        
   cutNameMarker:
 
 

@@ -18,7 +18,7 @@ def main():
     #logger.setLevel(logging.DEBUG)
     parser = argparse.ArgumentParser()
     #parser.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
-    parser.add_argument('-v', '--version', help='display version number and exit', action='version', version='%(prog)s 0.2.1')
+    parser.add_argument('-v', '--version', help='display version number and exit', action='version', version='%(prog)s 0.3.1')
     subparsers = parser.add_subparsers(title='fatool commands', help='each has own params, for more details use: command -h')
 
     sub_cut = subparsers.add_parser('cut', help='split supplied sequence into smaller parts, according to given params')
