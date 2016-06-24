@@ -66,7 +66,7 @@ optional arguments:
   --operator OPERATOR           user who have fired script it will be noted in log
   
   
-    extractNames:
+    extractNames
   
 usage: cmdfatool.py extractNames [-h] -f FAFILE [-o OUTPUT] [--report REPORT]
                                  [--operator OPERATOR]
@@ -79,7 +79,7 @@ optional arguments:
   --operator OPERATOR           user who have fired script it will be noted in log
  
  
-    extractContigs:
+    extractContigs
  
 usage: cmdfatool.py extractContigs [-h] -f FAFILE --list LIST -o OUTPUT
                                    [--report REPORT] [--operator OPERATOR]
@@ -126,7 +126,7 @@ optional arguments:
   --operator OPERATOR   user who have fired script it will be noted in log
   
   
-  split
+    split
 
 usage: cmdfatool.py split [-h] -f FAFILE -d OUTPUTDIR [--report REPORT]
                           [--operator OPERATOR]
@@ -139,7 +139,7 @@ optional arguments:
   --operator OPERATOR   user who have fired script it will be noted in log
   
   
-  reverse
+    reverse
   
 usage: cmdfatool.py reverse [-h] -f FAFILE -o OUTPUT [--report REPORT]
                             [--operator OPERATOR]
@@ -152,7 +152,7 @@ optional arguments:
   --operator OPERATOR   user who have fired script it will be noted in log  
   
   
-  validate
+    validate
   
 usage: cmdfatool.py validate [-h] -f FAFILE -t TYPE [--details]
 
@@ -164,7 +164,7 @@ optional arguments:
   --details             set if you want to see detaild validation info
   
   
-  stats
+    stats
   
 usage: cmdfatool.py stats [-h] -f FAFILE [--report REPORT]
                           [--operator [OPERATOR [OPERATOR ...]]]
@@ -175,7 +175,7 @@ optional arguments:
   --report REPORT             log file if not supplied stdout
   --operator [OPERATOR [OPERATOR ...]]  user who have fired script it will be noted in log
 
-  findPrimer:
+    findPrimer
 
 usage: cmdfatool.py findPrimer [-h] -f FAFILE --start START --stop STOP --mode
                                {FF,FR} [--minlen MINLEN] [--maxlen MAXLEN]
@@ -186,9 +186,9 @@ optional arguments:
   -h, --help            show this help message and exit
   -f FAFILE, --fafile FAFILE  
                         file to show statistics usualy *.fa
-  --start START         strat codon 5'
-  --stop STOP           stop codon 3'
-  --mode {FF,FR}        FF (start forward, stop forward) or FR (start 5' stop 3')
+  --start START         first sequence to be found
+  --stop STOP           last sequence to be found
+  --mode {FF,FR}        FF (start - forward orientated, stop - forward orientated) or FR (start - forward orientated, stop - reverse orientated)
   --minlen MINLEN       minimum length (detfault 50bp)
   --maxlen MAXLEN       max length (detfault 1000bp)
   --mml MML             mismatch level number of allowed missmatches in primers (detfault 0)
@@ -197,7 +197,7 @@ optional arguments:
                         user who have fired script it will be noted in report
 
 
-  cutNameMarker:
+    cutNameMarker
 
 
 usage: cmdfatool.py cutNameMarker [-h] -f FAFILE -m MARKER -l LENGTH
