@@ -125,6 +125,15 @@ def main():
     sub_lnam.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
     sub_lnam.set_defaults(func=cut_name_pattern)
     
+    sub_trn_d2p = subparsers.add_parser('translateDNA2Proteins', help='display translation to proteins')
+    sub_trn_d2p.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
+    sub_trn_d2p.add_argument('-o', '--output', help='output file default: output.fa', type=argparse.FileType('w'), default='output.fa')
+    sub_trn_d2p.add_argument('--startCodons', help='list of start codons separated by space bar', nargs='*', type=str)
+    sub_trn_d2p.add_argument('--stopCodons', help='list of stop codons separated by space bar', nargs='*', type=str)
+    sub_trn_d2p.add_argument('--nss', help='No Start Stop', action='store_true')
+    sub_trn_d2p.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_trn_d2p.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
+    sub_trn_d2p.set_defaults(func=translate_dna_to_protein)
     '''
     sub_fap  = subparsers.add_parser('findPrimer', help='show statistics of fa file')
     sub_fap.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
@@ -420,6 +429,77 @@ def cut_name_pattern(args):
     for r in fa.contigs:
         r.leave_name_after_marker(args.marker, args.length, args.keepMarker)
     fa.write(args.output)
+    
+def translate_dna_to_protein(args):
+    rep = str(make_log_header('translate2protein', args.operator))
+    fa = Fa.load_from_file(args.fafile)
+    r_dict = {}
+    otp = ''
+    if args.nss:
+        for r in fa.contigs:
+            r_dict = r.translate2protein({})
+            otp += '\n=============================\n'+r.name+'\n=============================\n'
+            otp += '\nFORWARD\n'
+            i = 0
+            for f in r_dict['fwd']:
+                otp += 'FRAME:\t'+str(i+1)+'\n'
+                otp += 'BEFORE:\t '+f[0]
+                otp += 'TRANSLATION:\n '+f[1]
+                otp += 'AFTER:\t '+f[2]
+                otp += '\n------------------------------------------------\n'
+                i+=1
+            otp += '\nREVERS\n'
+            otp += '\n------------------------------------------------\n'
+            i = 0
+            for f in r_dict['rev']:
+                otp += 'FRAME:\t'+str(i+1)+'\n'
+                otp += 'BEFORE:\t '+f[0]
+                otp += 'TRANSLATION:\n '+f[1]
+                otp += 'AFTER:\t '+f[2]
+                otp += '\n------------------------------------------------\n'
+                i+=1
+        rep += otp
+                
+    else:
+        tdict = {
+            'GCA':'A','GCC':'A','GCG':'A','GCT':'A', 'TGC':'C','TGT':'C', 'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+            'TTC':'F', 'TTT':'F', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 'CAC':'H', 'CAT':'H', 'ATA':'I', 'ATC':'I', 'ATT':'I',
+            'AAA':'K', 'AAG':'K', 'TTA':'L', 'TTG':'L', 'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 'ATG':'M', 'AAC':'N', 'AAT':'N',
+            'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 'CAA':'Q', 'CAG':'Q', 'AGA':'R', 'AGG':'R', 'CGA':'R', 'CGC':'R', 'CGG':'R', 
+            'CGT':'R', 'AGC':'S', 'AGT':'S', 'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'*', 'TAA':'*'
+        }
+        for r in fa.contigs:
+        
+            r_dict = r.translate2protein_in_range(args.startCodons, args.stopCodons, tdict)
+            otp += '\n=============================\n'+r.name+'\n=============================\n'
+            otp += 'FORWARD\n'
+            i = 0
+            
+            for f in r_dict['fwd']:
+                otp += 'FRAME:\t'+str(i+1)+'\n'
+                for k in f:
+                    otp += '\n'+k[0]+' start: '+str(k[1])
+                    otp += '\n------------------------------------------------\n'
+                otp += '\n=================================================\n'
+            otp += 'REVERS\n'
+            i = 0
+            for f in r_dict['rev']:
+                otp += 'FRAME:\t'+str(i+1)+'\n'
+                for k in f:
+                    otp += '\n'+k[0]+' start: '+str(k[1])
+                    otp += '\n------------------------------------------------\n'
+                otp += '\n=================================================\n'
+        rep += otp
+    
+    fa.write(args.output)
+    rep += '\n\n------------------------------------------------------'
+    rep += '\nFinished:\t'+str(datetime.datetime.now())
+    if args.report:
+        with args.report as log_file:
+            log_file.write(rep)
+    else:
+        print rep
     
 def cut_name(args):
     pass

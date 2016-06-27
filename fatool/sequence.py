@@ -286,13 +286,12 @@ class Sequence(object):
         # creating pattern to find stop codons
         for r in stop:
             p_stop +=  r+'|'
-        p_stop = '('+p.rstrip('|')+')'
+        p_stop = '('+p_stop.rstrip('|')+')'
         
-        # match for start contigs
         m = re.finditer(p, seq)
         
         # there will be stored latest string position for each frame
-        frame_iterator[0,0,0]
+        frame_iterator = [0,0,0]
         
         stop_pos = len(seq) # where to stop searching if no stopcodon found
         
@@ -303,9 +302,10 @@ class Sequence(object):
                 # set i for start position of current start contig
                 i = r.start()
                 ret = ''
-                while i+3 <= stop:
+                while i+3 <= stop_pos:
                     ret += Sequence.translate(seq[i:i+3], tdict)
                     if re.match(p_stop, seq[i:i+3]):
+                        #print 'exiting on: '+seq[i:i+3]
                         i = i+3
                         break
                     else:
@@ -321,18 +321,36 @@ class Sequence(object):
                     
         return [frame1, frame2, frame3]
         
+    def translate2protein_in_range(self, start, stop, tdict):
+        tdict = {
+            'GCA':'A','GCC':'A','GCG':'A','GCT':'A', 'TGC':'C','TGT':'C', 'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+            'TTC':'F', 'TTT':'F', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 'CAC':'H', 'CAT':'H', 'ATA':'I', 'ATC':'I', 'ATT':'I',
+            'AAA':'K', 'AAG':'K', 'TTA':'L', 'TTG':'L', 'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 'ATG':'M', 'AAC':'N', 'AAT':'N',
+            'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 'CAA':'Q', 'CAG':'Q', 'AGA':'R', 'AGG':'R', 'CGA':'R', 'CGC':'R', 'CGG':'R', 
+            'CGT':'R', 'AGC':'S', 'AGT':'S', 'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'*', 'TAA':'*'
+        }
+        
+        f = Sequence.translate2protein_in_range_generic(self.seq, start, stop, tdict)
+        r = Sequence.translate2protein_in_range_generic(self.reverse().seq, start, stop, tdict)
+        
+        return {'fwd':f, 'rev':r}
+        
+        
     @staticmethod
     def translate2protein_generic(seq, tdict):
         # +5 to secure all frames
         f1 = ''
         f2 = ''
         f3 = ''
+        i = 0
         while i+5 < len(seq):
             f1 += Sequence.translate(seq[i:i+3], tdict)
             f2 += Sequence.translate(seq[i+1:i+4], tdict)
             f3 += Sequence.translate(seq[i+2:i+5], tdict)
+            i = i + 3
             
-        return [('',f1,seq[-2:]),(seq[0:1],f2,seq[-1:]),(seq[0:2],f2,)]
+        return [('',f1,seq[-2:]),(seq[0:1],f2,seq[-1:]),(seq[0:2],f2,'')]
     
     def translate2protein(self, tdict):
         tdict = {
@@ -348,7 +366,7 @@ class Sequence(object):
         return {'fwd':f, 'rev':r}
     
     @staticmethod
-    def translate(contig, tdict):
+    def translate(codon, tdict):
         if codon in tdict:
             return tdict[codon]
         else:
