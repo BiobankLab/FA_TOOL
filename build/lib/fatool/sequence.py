@@ -4,12 +4,13 @@ from string import maketrans
 from collections import Counter
 import fuzzy
 import re
+import logging
 
 
 class Sequence(object):
     def __init__(self, name, seq):
         if Sequence.validate_name_string(name):
-            self.name = name.lstrip('>')
+            self.name = name
         else:
             raise NameError('Sequence name have to start with ">"') 
         self.seq = seq
@@ -133,7 +134,7 @@ class Sequence(object):
         log_info = []
         # if not allowed chars found
         if m:
-            # it may be 60 xxxxxxxxxx xxx.... format
+            # it may be 61 xxxxxxxxxx xxx.... format
             if re.search('(\d+)', seq):
                 seq_array = seq.split('\n')
                 new_array = []  # array to store new sequence after cleaning and transformation
@@ -146,7 +147,7 @@ class Sequence(object):
                 if end_of_seq_array > 1:
                     line_length = int(new_array[1][0])-int(new_array[0][0])
 
-                # validate ecah block (between " " [space]) of given sequence
+                # validate each block (between " " [space]) of given sequence
                 i = 0
                 while i < end_of_seq_array:
                     # digit on begining of line was not found - error
@@ -192,9 +193,35 @@ class Sequence(object):
         contig_end = len(self.seq)  # last position of contig
         contig_list = []  # contig list returning by function
         while i+length <= contig_end:
-            contig_list.append(Sequence('>'+self.name+'_frag_'+str(i + 1)+':'+str(i + length), str(self.seq[i:i+length])))
+            contig_list.append(Sequence(self.name+'_frag_'+str(i + 1)+':'+str(i + length), str(self.seq[i:i+length])))
             i = i+step
         return contig_list
+        
+    def cut_name(self, length, start = 0):
+        self.name = self.name[start:length]
+        print self.name
+        
+    def leave_name_after_marker(self, mark, length = 0, keep_marker = 1):
+        m = re.search(re.escape(mark), self.name)
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.DEBUG)
+        logger.debug(m)
+        logger.debug(keep_marker)
+        if m:
+            # keep original marker or skip it
+            
+            if keep_marker == 1:
+                s = m.start()
+            else:
+                s = m.end()
+            # defined length or return string to end
+            if length > 0:
+                self.name = '>'+self.name[s:s+length].lstrip('>')
+            else:
+                self.name = '>'+self.name[s:].lstrip('>')
+            return 1
+        return 0
+        
 
     def reverse(self):
         '''
@@ -206,7 +233,7 @@ class Sequence(object):
         rev = rev.translate(maketrans('ACTGactg', 'TGACtgac'))
         # creating 80 chars lines
         #rev = re.sub("(.{80})", '\\1\n', rev, 0)
-        return Sequence('>rev_'+self.name, rev)
+        return Sequence('>rev_'+self.name.lstrip('>'), rev)
 
 
     def normalize(self):
@@ -251,7 +278,7 @@ class Sequence(object):
         frame2 = []
         frame3 = []
         
-        # creating pattern to find start codons
+        # creating pattern (from dict) to find start codons
         for r in start:
             p +=  r+'|'
         p = '('+p.rstrip('|')+')'
@@ -259,13 +286,12 @@ class Sequence(object):
         # creating pattern to find stop codons
         for r in stop:
             p_stop +=  r+'|'
-        p_stop = '('+p.rstrip('|')+')'
+        p_stop = '('+p_stop.rstrip('|')+')'
         
-        # match for start contigs
         m = re.finditer(p, seq)
         
         # there will be stored latest string position for each frame
-        frame_iterator[0,0,0]
+        frame_iterator = [0,0,0]
         
         stop_pos = len(seq) # where to stop searching if no stopcodon found
         
@@ -276,9 +302,10 @@ class Sequence(object):
                 # set i for start position of current start contig
                 i = r.start()
                 ret = ''
-                while i+3 <= stop:
+                while i+3 <= stop_pos:
                     ret += Sequence.translate(seq[i:i+3], tdict)
                     if re.match(p_stop, seq[i:i+3]):
+                        #print 'exiting on: '+seq[i:i+3]
                         i = i+3
                         break
                     else:
@@ -294,18 +321,36 @@ class Sequence(object):
                     
         return [frame1, frame2, frame3]
         
+    def translate2protein_in_range(self, start, stop, tdict):
+        tdict = {
+            'GCA':'A','GCC':'A','GCG':'A','GCT':'A', 'TGC':'C','TGT':'C', 'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+            'TTC':'F', 'TTT':'F', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 'CAC':'H', 'CAT':'H', 'ATA':'I', 'ATC':'I', 'ATT':'I',
+            'AAA':'K', 'AAG':'K', 'TTA':'L', 'TTG':'L', 'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 'ATG':'M', 'AAC':'N', 'AAT':'N',
+            'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 'CAA':'Q', 'CAG':'Q', 'AGA':'R', 'AGG':'R', 'CGA':'R', 'CGC':'R', 'CGG':'R', 
+            'CGT':'R', 'AGC':'S', 'AGT':'S', 'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'*', 'TAA':'*'
+        }
+        
+        f = Sequence.translate2protein_in_range_generic(self.seq, start, stop, tdict)
+        r = Sequence.translate2protein_in_range_generic(self.reverse().seq, start, stop, tdict)
+        
+        return {'fwd':f, 'rev':r}
+        
+        
     @staticmethod
     def translate2protein_generic(seq, tdict):
         # +5 to secure all frames
         f1 = ''
         f2 = ''
         f3 = ''
+        i = 0
         while i+5 < len(seq):
             f1 += Sequence.translate(seq[i:i+3], tdict)
             f2 += Sequence.translate(seq[i+1:i+4], tdict)
             f3 += Sequence.translate(seq[i+2:i+5], tdict)
+            i = i + 3
             
-        return [('',f1,seq[-2:]),(seq[0:1],f2,seq[-1:]),(seq[0:2],f2,)]
+        return [('',f1,seq[-2:]),(seq[0:1],f2,seq[-1:]),(seq[0:2],f2,'')]
     
     def translate2protein(self, tdict):
         tdict = {
@@ -321,7 +366,7 @@ class Sequence(object):
         return {'fwd':f, 'rev':r}
     
     @staticmethod
-    def translate(contig, tdict):
+    def translate(codon, tdict):
         if codon in tdict:
             return tdict[codon]
         else:
@@ -331,37 +376,42 @@ class Sequence(object):
         self.normalize()
         return fuzzy.find_all_motifs(motif, self.seq, missmatch_level, hs_start_pos = 0)
         
-    def find_aprox_primers(self, start, stop, missmatch_level = 0, len_min = 50, len_max = 10000):
+    def find_primers(self, start, stop, mode, len_min = 50, len_max = 10000):
+        return self.find_aprox_primers(start, stop, mode, 0, len_min, len_max)
+        
+    
+    def find_aprox_primers(self, start, stop, mode, missmatch_level = 0, len_min = 50, len_max = 10000):
         #start 5'->3'
         # add missmatch_level condition if 50%>
-        rev = stop[::-1]
-        new_stop = rev.translate(maketrans('ACTGactg', 'TGACtgac'))
+        logger = logging.getLogger(__name__)
+        #logger.setLevel(logging.DEBUG)
+        logger.debug('given args: start:'+start+' stop: '+stop+' mode: '+mode+' mm level: '+str(missmatch_level)+' len_min: '+str(len_min)+' len_max: '+str(len_max))
+        #logger.debug('sequence: '+self.seq)
+        if mode.upper() == 'FR':
+            rev = stop[::-1]
+            stop = rev.translate(maketrans('ACTGactg', 'TGACtgac'))
+        elif mode.upper() != 'FF':
+            raise ('Unexpected mode: '+str(mode)+' expected values [FR|FF]')
+            
         r_list = []
         self.normalize()
-        #print '\nAfter normailzation'
-        #print self.seq
         
         res = fuzzy.find_all_motifs_in_aprox_range(start, stop, self.seq, missmatch_level, 0, len_min, len_max)
         if res:
             r_list.extend(res)
         
-        rev = start[::-1]
-        new_start = rev.translate(maketrans('ACTGactg', 'TGACtgac'))
-        #print 'new_seq in sequence\n'
-        #print new_seq.seq
-        res = fuzzy.find_all_motifs_in_aprox_range(new_start, stop, self.seq, missmatch_level, 0, len_min, len_max)
+        res = fuzzy.find_all_motifs_in_aprox_range(start, stop, self.reverse().seq, missmatch_level, 0, len_min, len_max)
         if res:
             r_list.extend(res)
-        print 'Sequence.find_aprox_primers',
-        for s in r_list:
-            print s+'\n'
+            
+        logger.debug(r_list)
         return r_list
         
     def __str__(self):
         '''
         creates nicely outputed string
         '''
-        return '>'+self.name+'\n'+re.sub("(.{80})", '\\1\n', self.seq, 0)+'\n'
+        return self.name+'\n'+re.sub("(.{80})", '\\1\n', self.seq, 0)+'\n'
 
 
     def __len__(self):

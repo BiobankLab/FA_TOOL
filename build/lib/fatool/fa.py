@@ -4,27 +4,34 @@
 import re
 import math
 from fatool import Sequence
+import logging
 
 class Fa(object):
     def __init__(self, contigs_list, name):
-        #print contigs_list
-        # do poprawki
+        logger = logging.getLogger(__name__)
+        
+        logger.debug('creating Fa object')
         self.name = name
         self.contigs = []
         self.contigs_idx = {}
         for r in contigs_list:
             if not isinstance(r, Sequence):
+                logger.error('Supplied param is not Sequence object')
                 raise TypeError('Wrong param supplied Sequence was expected')
             if not r.name in self.contigs_idx:
                 if len(self.contigs) > 0:
+                    logger.debug('appending contig: '+r.name)
                     self.contigs.append(r)
                 else:
+                    logger.debug('adding first contig: '+r.name)
                     self.contigs = [r]
 
                 self.contigs_idx[r.name] = len(self.contigs) - 1
             else:
+                logger.error('Sequence name: '+r.name+' already exists in file')
                 raise NameError('Sequence name already exists: '+r.name)
-            # self.stats{'A':0,'C':0,'T':0,'G':0,'N':0, 'L':0, }
+            
+            
     @staticmethod
     def load_from_file(file):
         if isinstance(file, str):
@@ -110,6 +117,7 @@ class Fa(object):
     def nl_statistics(self, g, percent):
         '''
         Counts statistics of N50, L50, N75 etc.
+        g array containing sorted contigs by length, from biggest to lowest
         '''
         ncount = -1 # index & number of contigs with +1
         nsum = 0

@@ -6,15 +6,19 @@ import argparse
 import re
 import datetime
 from string import maketrans
-# from fatool import Contig
 from fatool import *
 from decimal import *
+import logging
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    #logger.setLevel(logging.DEBUG)
     parser = argparse.ArgumentParser()
     #parser.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
-    parser.add_argument('-v', '--version', help='display version number and exit', action='version', version='%(prog)s 0.2.1')
+    parser.add_argument('-v', '--version', help='display version number and exit', action='version', version='%(prog)s 0.3.1')
     subparsers = parser.add_subparsers(title='fatool commands', help='each has own params, for more details use: command -h')
 
     sub_cut = subparsers.add_parser('cut', help='split supplied sequence into smaller parts, according to given params')
@@ -22,23 +26,23 @@ def main():
     sub_cut.add_argument('-r', '--range', help='cutted sequence length', type=int, required=True)
     sub_cut.add_argument('-o', '--output', help='output file default: output.fa', type=argparse.FileType('w'), default='output.fa')
     sub_cut.add_argument('-s', '--step', help='step length default: 1', type=int, default=1)
-    sub_cut.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
-    sub_cut.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
+    sub_cut.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_cut.add_argument('--operator', help='user who have fired script it will be noted in report', type=str)
     sub_cut.set_defaults(func=cut_fa)
 
     sub_en = subparsers.add_parser('extractNames', help='extracting contigs names only')
     sub_en.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_en.add_argument('-o', '--output', help='output file if not supplied stdout', type=argparse.FileType('w'))
-    sub_en.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
-    sub_en.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
+    sub_en.add_argument('--report', help='report results into  file if not supplied stdout', type=argparse.FileType('w'))
+    sub_en.add_argument('--operator', help='user who have fired script it will be noted in report', type=str)
     sub_en.set_defaults(func=extract_names)
 
     sub_ec = subparsers.add_parser('extractContigs', help='extracting contigs specified in file (output in new file)')
     sub_ec.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_ec.add_argument('--list', help='file containing list of contigs one contig per line', type=argparse.FileType('r'), required=True)
     sub_ec.add_argument('-o', '--output', help='output file; if --multifile is set output directory', type=str, required=True)
-    sub_ec.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
-    sub_ec.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
+    sub_ec.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_ec.add_argument('--operator', help='user who have fired script it will be noted in report', type=str)
     sub_ec.add_argument('--multifile', help='if this flag is set each contig will be saved in separate file', action='store_true')
     sub_ec.set_defaults(func=extract_contigs)
 
@@ -46,8 +50,8 @@ def main():
     sub_rc.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_rc.add_argument('--list', help='file containing list of contigs one contig per line', type=argparse.FileType('r'), required=True)
     sub_rc.add_argument('-o', '--output', help='output file if not supplied stdout', type=str, required=True)
-    sub_rc.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
-    sub_rc.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
+    sub_rc.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_rc.add_argument('--operator', help='user who have fired script it will be noted in report', type=str)
     sub_rc.set_defaults(func=remove_contigs)
     
     sub_jc = subparsers.add_parser('join', help='joining two or more files, yet not verifing duplicates')
@@ -55,22 +59,22 @@ def main():
     sub_jc.add_argument('-o', '--output', help='output file if not supplied stdout', type=argparse.FileType('w'), required=True)
     sub_jc.add_argument('--files', help='files to be joined', nargs='*', type=argparse.FileType('r'))
     sub_jc.add_argument('--overwrite', help='if set owerwrites contigs with same name', action='store_true')
-    sub_jc.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
-    sub_jc.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
+    sub_jc.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_jc.add_argument('--operator', help='user who have fired script it will be noted in report', type=str)
     sub_jc.set_defaults(func=join)
     
     sub_sc = subparsers.add_parser('split', help='each cotig saved into separate file')
     sub_sc.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_sc.add_argument('-d', '--outputDir', help='output directory where splited contigs will be saved', type=str, required=True)
-    sub_sc.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
-    sub_sc.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
+    sub_sc.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_sc.add_argument('--operator', help='user who have fired script it will be noted in report', type=str)
     sub_sc.set_defaults(func=split_contigs)
     
     sub_r = subparsers.add_parser('reverse', help='reverse all sequences in file')
     sub_r.add_argument('-f', '--fafile', help='file to be cut usualy *.fa', type=argparse.FileType('r'), required=True)
     sub_r.add_argument('-o', '--output', help='output file; if --multifile is set output directory', type=argparse.FileType('w'), required=True)
-    sub_r.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
-    sub_r.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
+    sub_r.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_r.add_argument('--operator', help='user who have fired script it will be noted in report', type=str)
     sub_r.set_defaults(func=reverse)
     
     sub_v  = subparsers.add_parser('validate', help='validates fa file')
@@ -81,31 +85,71 @@ def main():
     
     sub_s  = subparsers.add_parser('stats', help='show statistics of fa file')
     sub_s.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
-    sub_s.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
-    sub_s.add_argument('--operator', help='user who have fired script it will be noted in log', nargs='*', type=str)
+    sub_s.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_s.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
     sub_s.set_defaults(func=statistics)
+    '''
+    sub_fm  = subparsers.add_parser('findMotif', help='display motifs position in contig')
+    sub_fm.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
+    sub_fm.add_argument('--mml', help='mismatch level number of allowed missmatches in primers (detfault 0)', type=str, default=0)
+    sub_fm.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_fm.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
+    sub_fm.set_defaults(func=find_motif)
+    '''
+    sub_fp  = subparsers.add_parser('findPrimer', help='display list of founded primers')
+    sub_fp.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
+    sub_fp.add_argument('--start', help='strat codon 5\'', type=str, required=True)
+    sub_fp.add_argument('--stop', help='stop codon 3\'', type=str, required=True)
+    sub_fp.add_argument('--mode', help='FF (start forward, stop forward) or FR (start 5\' stop 3\')', type=str, choices=['FF', 'FR'], default = 'FR', required=True)
+    sub_fp.add_argument('--minlen', help='minimum length (detfault 50bp)', type=int, default=50)
+    sub_fp.add_argument('--maxlen', help='max length (detfault 1000bp)', type=int, default=1000)
+    sub_fp.add_argument('--mml', help='mismatch level number of allowed missmatches in primers (detfault 0)', type=int, default=0)
+    sub_fp.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_fp.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
+    sub_fp.set_defaults(func=find_primers)
     
-    sub_s  = subparsers.add_parser('findMotif', help='show statistics of fa file')
-    sub_s.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
-    sub_s.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
-    sub_s.add_argument('--operator', help='user who have fired script it will be noted in log', nargs='*', type=str)
-    sub_s.set_defaults(func=find_motif)
+    sub_cn = subparsers.add_parser('cutName', help='cuts name from position to given length')
+    sub_cn.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
+    sub_cn.add_argument('--start', help='start of cut', type=int, required=True)
+    sub_cn.add_argument('-l', '--length', help='length of cut', type=int, required=True)
+    sub_cn.set_defaults(func=cut_name)
     
-    sub_s  = subparsers.add_parser('findPrimer', help='show statistics of fa file')
-    sub_s.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
-    sub_s.add_argument('--start', help='strat codon 5\'', type=str, required=True)
-    sub_s.add_argument('--stop', help='stop codon 3\'', type=str, required=True)
-    sub_s.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
-    sub_s.add_argument('--operator', help='user who have fired script it will be noted in log', nargs='*', type=str)
-    sub_s.set_defaults(func=find_primers)
+    sub_lnam = subparsers.add_parser('cutNameMarker', help='cuts name leaving defined number of chars after begining of marker')
+    sub_lnam.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
+    sub_lnam.add_argument('-m', '--marker', help='marker that indicates start of cut', type=str, required=True)
+    sub_lnam.add_argument('-l', '--length', help='length of cut', type=int, required=True)
+    sub_lnam.add_argument('--keepMarker', help='weather to keep marker or not default 1 (Yes)', type=int, required=True)
+    sub_lnam.add_argument('-o', '--output', help='output file default: output.fa', type=argparse.FileType('w'), default='output.fa')
+    #sub_lnam.add_argument('-d', '--outputDir', help='output directory where multiple contigs will be saved', type=str)
+    sub_lnam.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_lnam.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
+    sub_lnam.set_defaults(func=cut_name_pattern)
     
-    #parser.add_argument('--operator', help='user who have fired script it will be noted in log', type=str)
-    #parser.add_argument('--log', help='log file if not supplied stdout', type=argparse.FileType('w'))
+    sub_trn_d2p = subparsers.add_parser('translateDNA2Proteins', help='display translation to proteins')
+    sub_trn_d2p.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
+    sub_trn_d2p.add_argument('-o', '--output', help='output file default: output.fa', type=argparse.FileType('w'), default='output.fa')
+    sub_trn_d2p.add_argument('--startCodons', help='list of start codons separated by space bar', nargs='*', type=str)
+    sub_trn_d2p.add_argument('--stopCodons', help='list of stop codons separated by space bar', nargs='*', type=str)
+    sub_trn_d2p.add_argument('--nss', help='No Start Stop', action='store_true')
+    sub_trn_d2p.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_trn_d2p.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
+    sub_trn_d2p.set_defaults(func=translate_dna_to_protein)
+    '''
+    sub_fap  = subparsers.add_parser('findPrimer', help='show statistics of fa file')
+    sub_fap.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
+    sub_fap.add_argument('--start', help='strat codon 5\'', type=str, required=True)
+    sub_fap.add_argument('--stop', help='stop codon 3\'', type=str, required=True)
+    sub_fap.add_argument('--minlen', help='minimum length (detfault 50bp)', type=str, default=50)
+    sub_fap.add_argument('--maxlen', help='max length (detfault 1000bp)', type=str, default=1000
+    sub_fap.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
+    sub_fap.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
+    sub_fap.set_defaults(func=find_primers)
+    '''
+    #parser.add_argument('--operator', help='user who have fired script it will be noted in report', type=str)
+    #parser.add_argument('--report', help='log file if not supplied stdout', type=argparse.FileType('w'))
 
     args = parser.parse_args()
-    #if args.version:
-    #    print version
-    #    exit(0)
+    
         
     args.func(args)
     
@@ -126,6 +170,13 @@ def make_log_header(cmd, op):
     
     
 def cut_fa(args):
+    #logging.basicConfig(level=logging.ERROR)
+    #logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+    
+    logger.setLevel(logging.DEBUG)
+    logger.debug('debug mode started')
+    logger.info('command: cut starting')
     rep = str(make_log_header('cut', args.operator))
     
     fafile = args.fafile
@@ -134,19 +185,26 @@ def cut_fa(args):
     step = args.step
     
     f = Fa.load_from_file(fafile)
+    logger.info('file: '+fafile.name+' loaded')
     contig_list = []
     for r in f.contigs:
-        contig_list.join(r.cut(split_range, step))
+        contig_list += r.cut(split_range, step)
+        logger.info('cutted contigs added from conting: '+r.name)
     result_fa = Fa(contig_list, 'splited')
+    logger.info('trying to write file')
     result_fa.write(output)
+    logger.info('file written')
     rep += '\n\n------------------------------------------------------'
     rep += '\nFinished:\t'+str(datetime.datetime.now())
-    if args.log:
-        with args.log as log_file:
+    if args.report:
+        with args.report as log_file:
             log_file.write(rep)
     
     
 def extract_names(args):
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.info)
+    logger.info('command: extractNames starting')
     rep = str(make_log_header('extractNames', args.operator))
     fafile = args.fafile
     output = args.output
@@ -159,8 +217,8 @@ def extract_names(args):
     rep += 'Number of neames founded:\t' + str(len(names))
     rep += '\n\n------------------------------------------------------'
     rep += '\nFinished:\t'+str(datetime.datetime.now())
-    if args.log:
-        with args.log as log_file:
+    if args.report:
+        with args.report as log_file:
             log_file.write(rep)
 
 def extract_contigs(args):
@@ -184,8 +242,8 @@ def extract_contigs(args):
     rep += '\Extracted contigs:\t'+str(len(result_ta.contigs))
     rep += '\n\n------------------------------------------------------'
     rep += '\nFinished:\t'+str(datetime.datetime.now())
-    if args.log:
-        with args.log as log_file:
+    if args.report:
+        with args.report as log_file:
             log_file.write(rep)
     else:
         print rep
@@ -205,8 +263,8 @@ def remove_contigs(args):
     result_fa.write(args.output)
     rep += '\n\n------------------------------------------------------'
     rep += '\nFinished:\t'+str(datetime.datetime.now())
-    if args.log:
-        with args.log as log_file:
+    if args.report:
+        with args.report as log_file:
             log_file.write(stats_rep)
     else:
         print stats_rep
@@ -232,8 +290,8 @@ def join(args):
     fa.write(args.output)
     rep += '\n\n------------------------------------------------------'
     rep += '\nFinished:\t'+str(datetime.datetime.now())
-    if args.log:
-        with args.log as log_file:
+    if args.report:
+        with args.report as log_file:
             log_file.write(stats_rep)
     else:
         print stats_rep
@@ -245,8 +303,8 @@ def split_contigs(args):
     fa.write_multiple_files(args.output)
     rep += '\n\n------------------------------------------------------'
     rep += '\nFinished:\t'+str(datetime.datetime.now())
-    if args.log:
-        with args.log as log_file:
+    if args.report:
+        with args.report as log_file:
             log_file.write(rep)
     else:
         print rep
@@ -296,8 +354,8 @@ def statistics(args):
     stats_rep += '\nL90:\t'+str(stats['L90'])
     stats_rep += '\n\n------------------------------------------------------'
     stats_rep += '\nFinished:\t'+str(datetime.datetime.now())
-    if args.log:
-        with args.log as log_file:
+    if args.report:
+        with args.report as log_file:
             log_file.write(stats_rep)
     else:
         print stats_rep
@@ -321,8 +379,8 @@ def validate(args):
     
     rep += '\n\n------------------------------------------------------'
     rep += '\nFinished:\t'+str(datetime.datetime.now())
-    if args.log:
-        with args.log as log_file:
+    if args.report:
+        with args.report as log_file:
             log_file.write(rep)
     else:
         print rep
@@ -333,21 +391,120 @@ def reverse(args):
     fa = Fa.load_from_file(args.fafile)
     fa.reverse()
     fa.write(args.output)
-    if args.log:
-        with args.log as log_file:
+    rep += '\n\n------------------------------------------------------'
+    rep += '\nFinished:\t'+str(datetime.datetime.now())
+    if args.report:
+        with args.report as log_file:
             log_file.write(rep)
     else:
         print rep
+        
 
 def find_motif(args):
     print 'not available yet'
     pass
 
 def find_primers(args):
-    print 'not available yet'
+    rep = str(make_log_header('reverse', args.operator))
+    fa = Fa.load_from_file(args.fafile)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    logger.debug(args)
+    rep = ''
+    for r in fa.contigs:
+        rep += '\n================\n\t\t'+r.name+'\n'
+        for q in r.find_aprox_primers(args.start, args.stop, str(args.mode), int(args.mml), args.minlen, args.maxlen):
+            rep += q+'\n'
+    rep += '\n\n------------------------------------------------------'
+    rep += '\nFinished:\t'+str(datetime.datetime.now())
+    if args.report:
+        with args.report as log_file:
+            log_file.write(rep)
+    else:
+        print rep
+        
+def cut_name_pattern(args):
+    rep = str(make_log_header('cutNameMarker', args.operator))
+    fa = Fa.load_from_file(args.fafile)
+    for r in fa.contigs:
+        r.leave_name_after_marker(args.marker, args.length, args.keepMarker)
+    fa.write(args.output)
+    
+def translate_dna_to_protein(args):
+    rep = str(make_log_header('translate2protein', args.operator))
+    fa = Fa.load_from_file(args.fafile)
+    r_dict = {}
+    otp = ''
+    if args.nss:
+        for r in fa.contigs:
+            r_dict = r.translate2protein({})
+            otp += '\n=============================\n'+r.name+'\n=============================\n'
+            otp += '\nFORWARD\n'
+            i = 0
+            for f in r_dict['fwd']:
+                otp += 'FRAME:\t'+str(i+1)+'\n'
+                otp += 'BEFORE:\t '+f[0]
+                otp += 'TRANSLATION:\n '+f[1]
+                otp += 'AFTER:\t '+f[2]
+                otp += '\n------------------------------------------------\n'
+                i+=1
+            otp += '\nREVERS\n'
+            otp += '\n------------------------------------------------\n'
+            i = 0
+            for f in r_dict['rev']:
+                otp += 'FRAME:\t'+str(i+1)+'\n'
+                otp += 'BEFORE:\t '+f[0]
+                otp += 'TRANSLATION:\n '+f[1]
+                otp += 'AFTER:\t '+f[2]
+                otp += '\n------------------------------------------------\n'
+                i+=1
+        rep += otp
+                
+    else:
+        tdict = {
+            'GCA':'A','GCC':'A','GCG':'A','GCT':'A', 'TGC':'C','TGT':'C', 'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+            'TTC':'F', 'TTT':'F', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 'CAC':'H', 'CAT':'H', 'ATA':'I', 'ATC':'I', 'ATT':'I',
+            'AAA':'K', 'AAG':'K', 'TTA':'L', 'TTG':'L', 'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 'ATG':'M', 'AAC':'N', 'AAT':'N',
+            'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 'CAA':'Q', 'CAG':'Q', 'AGA':'R', 'AGG':'R', 'CGA':'R', 'CGC':'R', 'CGG':'R', 
+            'CGT':'R', 'AGC':'S', 'AGT':'S', 'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'*', 'TAA':'*'
+        }
+        for r in fa.contigs:
+        
+            r_dict = r.translate2protein_in_range(args.startCodons, args.stopCodons, tdict)
+            otp += '\n=============================\n'+r.name+'\n=============================\n'
+            otp += 'FORWARD\n'
+            i = 0
+            
+            for f in r_dict['fwd']:
+                otp += 'FRAME:\t'+str(i+1)+'\n'
+                for k in f:
+                    otp += '\n'+k[0]+' start: '+str(k[1])
+                    otp += '\n------------------------------------------------\n'
+                otp += '\n=================================================\n'
+            otp += 'REVERS\n'
+            i = 0
+            for f in r_dict['rev']:
+                otp += 'FRAME:\t'+str(i+1)+'\n'
+                for k in f:
+                    otp += '\n'+k[0]+' start: '+str(k[1])
+                    otp += '\n------------------------------------------------\n'
+                otp += '\n=================================================\n'
+        rep += otp
+    
+    fa.write(args.output)
+    rep += '\n\n------------------------------------------------------'
+    rep += '\nFinished:\t'+str(datetime.datetime.now())
+    if args.report:
+        with args.report as log_file:
+            log_file.write(rep)
+    else:
+        print rep
+    
+def cut_name(args):
     pass
-    
-    
+
+        
 if __name__ == '__main__':
     exit(main())
     
