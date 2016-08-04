@@ -52,7 +52,7 @@ class Fa(object):
         nc = content.split('>')
         contigs_list = []
         for r in nc[1:]:
-            contigs_list.append(Sequence('>'+r.split('\n', 1)[0], re.sub('^>.*\n', '', '>'+r.rstrip())))
+            contigs_list.append(Sequence('>'+r.split('\n', 1)[0].rstrip(), re.sub('^>.*\n', '', '>'+r.rstrip())))
         return contigs_list
 
     def write(self, fafile):
@@ -97,11 +97,12 @@ class Fa(object):
         
     
     def extract(self, contigs_name_list):
+        print contigs_name_list
         new_contig_list = []
         for r in contigs_name_list:
             if r in self.contigs_idx:
                 new_contig_list.append(self.contigs[self.contigs_idx[r]])
-        return Fa(new_contig_list, 'extr_'+self.name)
+        return Fa(new_contig_list, '>extr_'+self.name)
 
     def remove(self, contigs_name_list):
         new_contig_list = []

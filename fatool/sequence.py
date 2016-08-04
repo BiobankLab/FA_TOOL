@@ -8,6 +8,50 @@ import logging
 
 
 class Sequence(object):
+    # 1
+    tdict_standard = {
+        'GCA':'A','GCC':'A','GCG':'A','GCT':'A', 'TGC':'C','TGT':'C', 'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+        'TTC':'F', 'TTT':'F', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 'CAC':'H', 'CAT':'H', 'ATA':'I', 'ATC':'I', 'ATT':'I',
+        'AAA':'K', 'AAG':'K', 'TTA':'L', 'TTG':'L', 'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 'ATG':'M', 'AAC':'N', 'AAT':'N',
+        'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 'CAA':'Q', 'CAG':'Q', 'AGA':'R', 'AGG':'R', 'CGA':'R', 'CGC':'R', 'CGG':'R', 
+        'CGT':'R', 'AGC':'S', 'AGT':'S', 'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+        'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'*', 'TAA':'*'
+    }
+    
+    start_standard = ['ATG', 'TTG', 'CTG']
+    
+    standard_stop = ['TAA', 'TAG', 'TGA']
+    
+    # 2
+    tdict_vertebrate_mitochondrial = {
+        'GCA':'A','GCC':'A','GCG':'A','GCT':'A', 'TGC':'C','TGT':'C', 'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+        'TTC':'F', 'TTT':'F', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 'CAC':'H', 'CAT':'H', 'ATA':'M', 'ATC':'I', 'ATT':'I',
+        'AAA':'K', 'AAG':'K', 'TTA':'L', 'TTG':'L', 'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 'ATG':'M', 'AAC':'N', 'AAT':'N',
+        'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 'CAA':'Q', 'CAG':'Q', 'AGA':'*', 'AGG':'*', 'CGA':'R', 'CGC':'R', 'CGG':'R', 
+        'CGT':'R', 'AGC':'S', 'AGT':'S', 'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+        'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'W', 'TAA':'*'
+    }
+    
+    # 3
+    tdict_yeast_mitochondrial = {
+        'GCA':'A','GCC':'A','GCG':'A','GCT':'A', 'TGC':'C','TGT':'C', 'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+        'TTC':'F', 'TTT':'F', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 'CAC':'H', 'CAT':'H', 'ATA':'M', 'ATC':'I', 'ATT':'I',
+        'AAA':'K', 'AAG':'K', 'TTA':'L', 'TTG':'L', 'CTA':'T', 'CTC':'T', 'CTG':'T', 'CTT':'T', 'ATG':'M', 'AAC':'N', 'AAT':'N',
+        'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 'CAA':'Q', 'CAG':'Q', 'AGA':'R', 'AGG':'R', 'CGA':'R', 'CGC':'R', 'CGG':'R', 
+        'CGT':'R', 'AGC':'S', 'AGT':'S', 'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+        'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'W', 'TAA':'*'
+    }
+    
+    # 11
+    tdict_bacterial_archaeal_plant_plastid = {
+        'GCA':'A','GCC':'A','GCG':'A','GCT':'A', 'TGC':'C','TGT':'C', 'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+        'TTC':'F', 'TTT':'F', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 'CAC':'H', 'CAT':'H', 'ATA':'I', 'ATC':'I', 'ATT':'I',
+        'AAA':'K', 'AAG':'K', 'TTA':'L', 'TTG':'L', 'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 'ATG':'M', 'AAC':'N', 'AAT':'N',
+        'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 'CAA':'Q', 'CAG':'Q', 'AGA':'R', 'AGG':'R', 'CGA':'R', 'CGC':'R', 'CGG':'R', 
+        'CGT':'R', 'AGC':'S', 'AGT':'S', 'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+        'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'*', 'TAA':'*'
+    }
+    
     def __init__(self, name, seq):
         if Sequence.validate_name_string(name):
             self.name = name
@@ -30,47 +74,7 @@ class Sequence(object):
         '''
         validates general seqence not specified for DNA or others.
         '''
-        # pattern to find not allowed chars.
-        pattern = re.compile('[^ACGNTUBDHKMRSVWY\-\nacgntubdhkmrsvwy]')
-        if pattern.search(self.seq):
-            if re.search('(\d+)', self.seq):
-                seq_array = self.seq.split('\n')
-                new_array = []  # array to store new sequence
-                for r in seq_array:
-                    r = r.lstrip()  # removing ' ' from beginings and ends
-                    nr = r.split(' ')  # split to array to catch all blocks aaaaaaaaaa aaaaaaaaaa
-                    new_array.append(nr)
-                
-                end_of_seq_array = len(seq_array)
-                # if min. two lines calculate expected line length
-                if end_of_seq_array > 1:
-                    line_length = int(new_array[1][0])-int(new_array[0][0])
-
-                # validate ecah block (between " ") of sequence ()
-                i = 0
-                while i < end_of_seq_array:
-                    if not re.search('(\d+)', new_array[i][0]):
-                        return 7  # line doesn't starts with digit
-                    if not (len(new_array[i])-1)*10 == line_length and i != (end_of_seq_array-1):
-                        return 0 # bad line length
-                    for a, r in enumerate(new_array[i][1:]):  # skip first elem which is digit
-                        if len(r) != 10:  # block not eq 10
-                            if len(r) < 10:  # if less it can be ok if last elem of last line
-                                if(i == end_of_seq_array - 1):
-                                    if a != len(new_array[i]) - 2:  # if last -2 because enumerate is from first elem not 0 elem.
-                                        return 0  # not last elem of last line
-                                else:
-                                    return 0  # not last line
-                            else:
-                                return 0  # block not eq 10
-                        if pattern.search(r):
-                            return 0
-                    i += 1
-            else:
-                return 0  # digit is not first char
-            # return pattern.search(self.seq) but nan error code returned before
-            return 1
-        return 1  # valid
+        return Sequence.generic_validate(self.seq, '[^ACGNTUBDHKMRSVWY\-\nacgntubdhkmrsvwy]')
     
     @staticmethod
     def generic_validate(seq, domain):
@@ -199,7 +203,6 @@ class Sequence(object):
         
     def cut_name(self, length, start = 0):
         self.name = self.name[start:length]
-        print self.name
         
     def leave_name_after_marker(self, mark, length = 0, keep_marker = 1):
         m = re.search(re.escape(mark), self.name)
@@ -305,7 +308,6 @@ class Sequence(object):
                 while i+3 <= stop_pos:
                     ret += Sequence.translate(seq[i:i+3], tdict)
                     if re.match(p_stop, seq[i:i+3]):
-                        #print 'exiting on: '+seq[i:i+3]
                         i = i+3
                         break
                     else:
@@ -322,14 +324,6 @@ class Sequence(object):
         return [frame1, frame2, frame3]
         
     def translate2protein_in_range(self, start, stop, tdict):
-        tdict = {
-            'GCA':'A','GCC':'A','GCG':'A','GCT':'A', 'TGC':'C','TGT':'C', 'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
-            'TTC':'F', 'TTT':'F', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 'CAC':'H', 'CAT':'H', 'ATA':'I', 'ATC':'I', 'ATT':'I',
-            'AAA':'K', 'AAG':'K', 'TTA':'L', 'TTG':'L', 'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 'ATG':'M', 'AAC':'N', 'AAT':'N',
-            'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 'CAA':'Q', 'CAG':'Q', 'AGA':'R', 'AGG':'R', 'CGA':'R', 'CGC':'R', 'CGG':'R', 
-            'CGT':'R', 'AGC':'S', 'AGT':'S', 'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
-            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'*', 'TAA':'*'
-        }
         
         f = Sequence.translate2protein_in_range_generic(self.seq, start, stop, tdict)
         r = Sequence.translate2protein_in_range_generic(self.reverse().seq, start, stop, tdict)
@@ -353,14 +347,7 @@ class Sequence(object):
         return [('',f1,seq[-2:]),(seq[0:1],f2,seq[-1:]),(seq[0:2],f2,'')]
     
     def translate2protein(self, tdict):
-        tdict = {
-            'GCA':'A','GCC':'A','GCG':'A','GCT':'A', 'TGC':'C','TGT':'C', 'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
-            'TTC':'F', 'TTT':'F', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 'CAC':'H', 'CAT':'H', 'ATA':'I', 'ATC':'I', 'ATT':'I',
-            'AAA':'K', 'AAG':'K', 'TTA':'L', 'TTG':'L', 'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 'ATG':'M', 'AAC':'N', 'AAT':'N',
-            'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 'CAA':'Q', 'CAG':'Q', 'AGA':'R', 'AGG':'R', 'CGA':'R', 'CGC':'R', 'CGG':'R', 
-            'CGT':'R', 'AGC':'S', 'AGT':'S', 'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
-            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'*', 'TAA':'*'
-        }
+        
         f = Sequence.translate2protein_generic(self.seq, tdict)
         r = Sequence.translate2protein_generic(self.reverse().seq, tdict)
         return {'fwd':f, 'rev':r}

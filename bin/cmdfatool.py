@@ -130,23 +130,14 @@ def main():
     sub_trn_d2p.add_argument('-o', '--output', help='output file default: output.fa', type=argparse.FileType('w'), default='output.fa')
     sub_trn_d2p.add_argument('--startCodons', help='list of start codons separated by space bar', nargs='*', type=str)
     sub_trn_d2p.add_argument('--stopCodons', help='list of stop codons separated by space bar', nargs='*', type=str)
+    sub_trn_d2p.add_argument(
+        '--tdict', help='Which dictionary use for translation: STD - standard, VMTO - Vertebrate Mitochondrial, YMTO - Yeast Mitochondrial, BAPP - Bacterial Archaeal Plant and Plastid', 
+        type=str, choices=['STD', 'VMTO', 'YMTO', 'BAPP'], default = 'STD'
+    )
     sub_trn_d2p.add_argument('--nss', help='No Start Stop', action='store_true')
     sub_trn_d2p.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
     sub_trn_d2p.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
     sub_trn_d2p.set_defaults(func=translate_dna_to_protein)
-    '''
-    sub_fap  = subparsers.add_parser('findPrimer', help='show statistics of fa file')
-    sub_fap.add_argument('-f', '--fafile', help='file to show statistics usualy *.fa', type=argparse.FileType('r'), required=True)
-    sub_fap.add_argument('--start', help='strat codon 5\'', type=str, required=True)
-    sub_fap.add_argument('--stop', help='stop codon 3\'', type=str, required=True)
-    sub_fap.add_argument('--minlen', help='minimum length (detfault 50bp)', type=str, default=50)
-    sub_fap.add_argument('--maxlen', help='max length (detfault 1000bp)', type=str, default=1000
-    sub_fap.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
-    sub_fap.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
-    sub_fap.set_defaults(func=find_primers)
-    '''
-    #parser.add_argument('--operator', help='user who have fired script it will be noted in report', type=str)
-    #parser.add_argument('--report', help='log file if not supplied stdout', type=argparse.FileType('w'))
 
     args = parser.parse_args()
     
@@ -203,7 +194,7 @@ def cut_fa(args):
     
 def extract_names(args):
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.info)
+    logger.setLevel(logging.INFO)
     logger.info('command: extractNames starting')
     rep = str(make_log_header('extractNames', args.operator))
     fafile = args.fafile
@@ -213,7 +204,7 @@ def extract_names(args):
     names = fa.show_names()
     with output as o:
         for r in names:
-            o.write('>'+r)
+            o.write(r+'\n')
     rep += 'Number of neames founded:\t' + str(len(names))
     rep += '\n\n------------------------------------------------------'
     rep += '\nFinished:\t'+str(datetime.datetime.now())
@@ -239,7 +230,7 @@ def extract_contigs(args):
     else:
         result_fa.write(args.output)
     rep += '\nContigs to remove:\t'+str(len(elist))
-    rep += '\Extracted contigs:\t'+str(len(result_ta.contigs))
+    rep += '\Extracted contigs:\t'+str(len(result_fa.contigs))
     rep += '\n\n------------------------------------------------------'
     rep += '\nFinished:\t'+str(datetime.datetime.now())
     if args.report:
@@ -429,51 +420,55 @@ def cut_name_pattern(args):
     for r in fa.contigs:
         r.leave_name_after_marker(args.marker, args.length, args.keepMarker)
     fa.write(args.output)
+
+def print_frame_output(r_dict):
+    i = 0
+    otp = ''
+    for f in r_dict:
+        otp += 'FRAME:\t'+str(i+1)+'\n'
+        otp += '\nBEFORE:\t '+f[0]
+        otp += '\nTRANSLATION:\n\n'+f[1]
+        otp += '\n\nAFTER:\t '+f[2]
+        otp += '\n------------------------------------------------\n'
+        i+=1
+    return otp
     
 def translate_dna_to_protein(args):
     rep = str(make_log_header('translate2protein', args.operator))
     fa = Fa.load_from_file(args.fafile)
+    if args.tdict == 'STD':
+        tdict = Sequence.tdict_standard
+    elif args.tdict == 'VMTO':
+        tdict = Sequence.tdict_vertebrate_mitochondrial
+    elif args.tdict == 'YMTO':
+        tdict = Sequence.tdict_yeast_mitochondrial
+    elif args.tdict == '????????':
+        tdict = Sequence.tdict_standard
+    elif args.tdict == 'BAPP':
+        tdict = Sequence.tdict_bacterial_archaeal_plant_plastid
+    else:
+        print 'applied dictionary is not valid!'
+        exit(1)
+        
     r_dict = {}
     otp = ''
     if args.nss:
         for r in fa.contigs:
-            r_dict = r.translate2protein({})
+            r_dict = r.translate2protein(tdict)
             otp += '\n=============================\n'+r.name+'\n=============================\n'
-            otp += '\nFORWARD\n'
-            i = 0
-            for f in r_dict['fwd']:
-                otp += 'FRAME:\t'+str(i+1)+'\n'
-                otp += 'BEFORE:\t '+f[0]
-                otp += 'TRANSLATION:\n '+f[1]
-                otp += 'AFTER:\t '+f[2]
-                otp += '\n------------------------------------------------\n'
-                i+=1
-            otp += '\nREVERS\n'
-            otp += '\n------------------------------------------------\n'
-            i = 0
-            for f in r_dict['rev']:
-                otp += 'FRAME:\t'+str(i+1)+'\n'
-                otp += 'BEFORE:\t '+f[0]
-                otp += 'TRANSLATION:\n '+f[1]
-                otp += 'AFTER:\t '+f[2]
-                otp += '\n------------------------------------------------\n'
-                i+=1
+            otp += '\nFORWARD\n\n'
+            otp += print_frame_output(r_dict['fwd'])
+            otp += '\n'+'='*15+'\n'
+            otp += '\nREVERS\n\n'
+            otp += print_frame_output(r_dict['rev'])
         rep += otp
                 
     else:
-        tdict = {
-            'GCA':'A','GCC':'A','GCG':'A','GCT':'A', 'TGC':'C','TGT':'C', 'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
-            'TTC':'F', 'TTT':'F', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 'CAC':'H', 'CAT':'H', 'ATA':'I', 'ATC':'I', 'ATT':'I',
-            'AAA':'K', 'AAG':'K', 'TTA':'L', 'TTG':'L', 'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 'ATG':'M', 'AAC':'N', 'AAT':'N',
-            'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 'CAA':'Q', 'CAG':'Q', 'AGA':'R', 'AGG':'R', 'CGA':'R', 'CGC':'R', 'CGG':'R', 
-            'CGT':'R', 'AGC':'S', 'AGT':'S', 'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
-            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'*', 'TAA':'*'
-        }
         for r in fa.contigs:
         
             r_dict = r.translate2protein_in_range(args.startCodons, args.stopCodons, tdict)
             otp += '\n=============================\n'+r.name+'\n=============================\n'
-            otp += 'FORWARD\n'
+            otp += 'FORWARD\n\n'
             i = 0
             
             for f in r_dict['fwd']:
@@ -481,15 +476,16 @@ def translate_dna_to_protein(args):
                 for k in f:
                     otp += '\n'+k[0]+' start: '+str(k[1])
                     otp += '\n------------------------------------------------\n'
-                otp += '\n=================================================\n'
-            otp += 'REVERS\n'
+                otp += '\n'+'='*15+'\n'
+                i += 1
+            otp += 'REVERS\n\n'
             i = 0
             for f in r_dict['rev']:
                 otp += 'FRAME:\t'+str(i+1)+'\n'
                 for k in f:
                     otp += '\n'+k[0]+' start: '+str(k[1])
                     otp += '\n------------------------------------------------\n'
-                otp += '\n=================================================\n'
+                i += 1
         rep += otp
     
     fa.write(args.output)

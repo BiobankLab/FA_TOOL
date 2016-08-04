@@ -197,7 +197,7 @@ optional arguments:
                         user who have fired script it will be noted in report
 
                         
-  cutNameMarker:
+  cutNameMarker
 
 
 usage: cmdfatool.py cutNameMarker [-h] -f FAFILE -m MARKER -l LENGTH
@@ -210,3 +210,27 @@ optional arguments:
   -l LENGTH, --length LENGTH  length of cut
   --keepMarker KEEPMARKER     weather to keep marker or not default 1 (Yes)
   -o OUTPUT, --output OUTPUT  output file default: output.fa
+
+    translateDNA2Proteins
+
+usage: cmdfatool.py translateDNA2Proteins [-h] -f FAFILE [-o OUTPUT]
+                                          [--startCodons [STARTCODONS [STARTCODONS ...]]]
+                                          [--stopCodons [STOPCODONS [STOPCODONS ...]]]
+                                          [--tdict {STD,VMTO,YMTO,BAPP}]
+                                          [--nss] [--report REPORT]
+                                          [--operator [OPERATOR [OPERATOR ...]]]
+
+optional arguments:
+  -h, --help                    show this help message and exit
+  -f FAFILE, --fafile FAFILE    file to show statistics usualy *.fa
+  -o OUTPUT, --output OUTPUT    output file default: output.fa
+  --startCodons [STARTCODONS [STARTCODONS ...]] list of start codons separated by space bar
+  --stopCodons [STOPCODONS [STOPCODONS ...]]    list of stop codons separated by space bar
+  --tdict {STD,VMTO,YMTO,BAPP}
+                        Which dictionary use for translation: STD - standard,
+                        VMTO - Vertebrate Mitochondrial, YMTO - Yeast
+                        Mitochondrial, BAPP - Bacterial Archaeal Plant and
+                        Plastid
+  --nss                         No Start Stop
+  --report REPORT               report results into file if not supplied stdout
+  --operator [OPERATOR [OPERATOR ...]]  user who have fired script it will be noted in report
