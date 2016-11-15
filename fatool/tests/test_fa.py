@@ -28,7 +28,7 @@ class TestFa(unittest.TestCase):
         cl.append('something')
         with self.assertRaises(TypeError):
             Fa(cl, 'name4')
-        
+    '''        
     def test_str(self):
         cl = []
         cl.append(Sequence('>name', 'ACTGactg'))
@@ -187,7 +187,15 @@ class TestFa(unittest.TestCase):
         os.remove('f2.fa')
         os.remove('test.fa')
         pass
-        
+    '''    
+    def test_conv_to_fq(self):
+        cl = []
+        test = 'ATGGAATCGGCTTTTAATACTGCAGGGGCGTTAAGTTGGCATGAACTCACAACCAATAATACCGAAGAGGCCATGCGCTTCTATGCTGAGATTTTTGGCTGGCACTTTAAAACCGTCAAAATGCCCCACGGTCACTATCACATTATTGAAAACGAGGGGATCAGCATTGGCGGAATTACCGACAGTTTAATCCCCACCCTTCCCTCACATTGGACTGGCTATATTACCGTTAACGATGTGGATCAAGTGGCTATCAGTGCTAAAAAACTCGGCGGTGACATTCTGTTTGGCCCTGAAGACATTCCAGAGGTGGGCCGTTTTTGTTGGATAAAAGACCCACAGGGCGCCATTATTGCGGCCATTAGCTATTTAAAACGTTGATGTAA'
+        cl.append(Sequence('>test', test))
+        cl.append(Sequence('>test2','ATGGAATCGGCTTTTAATACTGCAGGGGCGTTAAGTTGGCATGAACTCACAACCAATAATACCGAAGAGGCCATGCGCTTCTATGCTGAGATTTTTGGCTGGCACTTTAAAACCGTCAAAATGCCCCACGGTCACTNNNNNN'))
+        f = Fa(cl,'fa_test')
+        fq = f.convert_to_fq(40)
+        print fq
         
 if __name__ == "__main__":
     unittest.main()

@@ -6,6 +6,7 @@ import math
 from fatool import Sequence
 import logging
 
+
 class Fa(object):
     def __init__(self, contigs_list, name):
         logger = logging.getLogger(__name__)
@@ -13,6 +14,8 @@ class Fa(object):
         logger.debug('creating Fa object')
         self.name = name
         self.contigs = []
+        # index of contigs positions 
+        # contig_name:position_in_contigs
         self.contigs_idx = {}
         for r in contigs_list:
             if not isinstance(r, Sequence):
@@ -104,6 +107,20 @@ class Fa(object):
                 new_contig_list.append(self.contigs[self.contigs_idx[r]])
         return Fa(new_contig_list, '>extr_'+self.name)
 
+    def extract_by_name_frag(self, name_frag, expected_matches = 1):
+        new_contigs_list = []
+        #m = re.search(re.escape(name_frag), self.name)
+        #while i < expected_matches:
+        i = 0
+        for r in self.contigs:
+            if r.equal_to_name_frag(name_frag):
+                new_contigs_list.append(r)
+                i += 1
+                if i >= expected_matches:
+                    return new_contigs_list
+            
+            
+        
     def remove(self, contigs_name_list):
         new_contig_list = []
         for r in self.contigs:
@@ -215,3 +232,17 @@ class Fa(object):
         for r in self.contigs:
             return_string += str(r)
         return return_string
+
+    def convert_to_fq(self, quality):
+        nlist = []
+        i = 1
+        for r in self.contigs:
+            q = chr(33+quality)*len(r)
+                #n = self.name.replace('>', '@')
+                #n = n.replace(' ','_')
+            n = '@EAS123:100:FC123VJ:2:'+str(i)+':'+str(i*7)+':'+str(i*8)+' 1:N:18:1'
+            i += 1
+            nlist.append(Sequence(n, r.seq, q))
+        return Fa(nlist, self.name+'_fq')
+        
+            

@@ -138,6 +138,13 @@ def main():
     sub_trn_d2p.add_argument('--report', help='report results into file if not supplied stdout', type=argparse.FileType('w'))
     sub_trn_d2p.add_argument('--operator', help='user who have fired script it will be noted in report', nargs='*', type=str)
     sub_trn_d2p.set_defaults(func=translate_dna_to_protein)
+    
+    
+    sub_2fq = subparsers.add_parser('cnv2fq', help='converts *.FASTA to *.FQ')
+    sub_2fq.add_argument('-f', '--fafile', help='file to convert *.fa', type=argparse.FileType('r'), required=True)
+    sub_2fq.add_argument('-o', '--output', help='file to output as *.fq', type=argparse.FileType('w'), required=True)
+    sub_2fq.add_argument('-q', '--quality', help='quality score to add to reads', type=int, required=True)
+    sub_2fq.set_defaults(func=convert_to_fq)
 
     args = parser.parse_args()
     
@@ -198,13 +205,17 @@ def extract_names(args):
     logger.info('command: extractNames starting')
     rep = str(make_log_header('extractNames', args.operator))
     fafile = args.fafile
-    output = args.output
+    #output = args.output
     
     fa = Fa.load_from_file(fafile)
     names = fa.show_names()
-    with output as o:
+    if args.output:
+        with args.output as o:
+            for r in names:
+                o.write(r+'\n')
+    else:
         for r in names:
-            o.write(r+'\n')
+            print r
     rep += 'Number of neames founded:\t' + str(len(names))
     rep += '\n\n------------------------------------------------------'
     rep += '\nFinished:\t'+str(datetime.datetime.now())
@@ -500,6 +511,21 @@ def translate_dna_to_protein(args):
 def cut_name(args):
     pass
 
+def convert_to_fq(args):
+    fa = Fa.load_from_file(args.fafile)
+    #fq = fa.convert_to_fq(args.quality)
+    i = 1
+    with args.output as w:
+        for r in fa.contigs:
+            q = chr(33+args.quality)*len(r)
+                    #n = self.name.replace('>', '@')
+                    #n = n.replace(' ','_')
+            n = '@EAS123:100:FC123VJ:2:'+str(i)+':'+str(i*7)+':'+str(i*8)+' 1:N:18:1'
+            i += 1
+                #nlist.append(Sequence(n, r.seq, q))
+            w.write(str(Sequence(n, r.seq, q)))
+    
+    #fq.write(args.output)
         
 if __name__ == '__main__':
     exit(main())

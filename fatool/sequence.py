@@ -52,13 +52,13 @@ class Sequence(object):
         'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'TGG':'W', 'TAC':'Y', 'TAT':'Y', 'TAG': '*', 'TGA':'*', 'TAA':'*'
     }
     
-    def __init__(self, name, seq):
+    def __init__(self, name, seq, quality = None):
         if Sequence.validate_name_string(name):
             self.name = name
         else:
-            raise NameError('Sequence name have to start with ">"') 
-        self.seq = seq
-        #self.quality = quality
+            raise NameError('Sequence name have to start with ">" or "@"') 
+        self.seq = seq.strip()
+        self.quality = quality
 
     # def is_valid(self):
 
@@ -69,6 +69,10 @@ class Sequence(object):
     def validate_name_string(nstr):
         if re.search('^>', nstr):
             return 1
+        elif re.search('^@', nstr):
+            return 1
+        else:
+            return 0
 
     def validate_seq(self):
         '''
@@ -243,6 +247,7 @@ class Sequence(object):
         self.seq = re.sub(' ', '', self.seq)
         self.seq = re.sub('^\d', '', self.seq, re.M)
         self.seq = re.sub('\n', '', self.seq)
+        self.seq = re.sub('\r', '', self.seq)
 
     def statistics(self):
         '''
@@ -394,11 +399,21 @@ class Sequence(object):
         logger.debug(r_list)
         return r_list
         
+    def equal_to_name_frag(self, name_frag):
+        if re.search(re.escape(name_frag), self.name):
+            #print re.search(name_frag, self.name)
+            return 1
+        return 0
+        
     def __str__(self):
         '''
         creates nicely outputed string
         '''
-        return self.name+'\n'+re.sub("(.{80})", '\\1\n', self.seq, 0)+'\n'
+        if re.search('^@', self.name) and len(self.quality) == len(self.seq):
+            return self.name+'\n'+self.seq+'\n+\n'+self.quality+'\n'
+        else:
+            return self.name+'\n'+re.sub("(.{80})", '\\1\n', self.seq, 0)+'\n'
+        
 
 
     def __len__(self):
@@ -407,6 +422,8 @@ class Sequence(object):
     def __cmp__(self, other):
         if self.seq == other.seq:
             return 0
+        else:
+            return 1
         
     def __eq__(self, other):
         return self.seq == other.seq
