@@ -24,11 +24,11 @@ class TestFa(unittest.TestCase):
         f = Fa(cl, 'test-fa')
         self.assertEqual(cl, f.contigs)
         self.assertEqual('test-fa', f.name)
-        self.assertEqual({'name':0, 'name2':1, 'name3':2}, f.contigs_idx)
+        self.assertEqual({'>name':0, '>name2':1, '>name3':2}, f.contigs_idx)
         cl.append('something')
         with self.assertRaises(TypeError):
             Fa(cl, 'name4')
-    '''        
+            
     def test_str(self):
         cl = []
         cl.append(Sequence('>name', 'ACTGactg'))
@@ -69,29 +69,32 @@ class TestFa(unittest.TestCase):
     def test_show_names(self):
         cl = [Sequence('>name', 'ACTGactg'), Sequence('>name2', 'NNNNNNNNNACTGNNNN'), Sequence('>name3', 'CTNACtacgatNNNNNNN')]
         f = Fa(cl, 'test-fa')
-        self.assertEqual(['name','name2','name3'], f.show_names())
+        self.assertEqual(['>name','>name2','>name3'], f.show_names())
         f.add_contig(Sequence('>name2', 'ACTGaaaaaaa'), 1)
-        self.assertEqual(['name','name3','name2'], f.show_names())
+        self.assertEqual(['>name','>name3','>name2'], f.show_names())
         f.add_contig(Sequence('>name7', 'ACTGaaaaaaa'), 1)
-        self.assertEqual(['name','name3','name2','name7'], f.show_names())
+        self.assertEqual(['>name','>name3','>name2','>name7'], f.show_names())
         
     def test_extract(self):
         cl = [Sequence('>name', 'ACTGactg'), Sequence('>name2', 'NNNNNNNNNACTGNNNN'), Sequence('>name3', 'CTNACtacgatNNNNNNN')]
         f = Fa(cl, 'test-fa')
         self.assertEqual(cl, f.contigs)
         cl2 = [Sequence('>name2', 'NNNNNNNNNACTGNNNN'), Sequence('>name3', 'CTNACtacgatNNNNNNN')]
-        self.assertEqual(cl2, f.extract(['name2', 'name3']).contigs)
-        self.assertEqual('extr_test-fa', f.extract(['name2', 'name3']).name)
-        self.assertEqual(cl2, f.extract(['name2', 'name3', 'name321']).contigs)
+        self.assertEqual(cl2, f.extract(['>name2', '>name3']).contigs)
+        print 'printing contigs'
+        for c in f.extract(['name2', 'name3']).contigs:
+            print c
+        self.assertEqual('>extr_test-fa', f.extract(['>name2', '>name3']).name)
+        self.assertEqual(cl2, f.extract(['>name2', '>name3', '>name321']).contigs)
 
     
     def test_remove(self):
         cl = [Sequence('>name', 'ACTGactg'), Sequence('>name2', 'NNNNNNNNNACTGNNNN'), Sequence('>name3', 'CTNACtacgatNNNNNNN')]
         f = Fa(cl, 'test-fa')
-        self.assertEqual([Sequence('>name2', 'NNNNNNNNNACTGNNNN'), Sequence('>name3', 'CTNACtacgatNNNNNNN')], f.remove(['name']).contigs)
-        self.assertEqual([Sequence('>name', 'ACTGactg')], f.remove(['name2','name3']).contigs)
-        self.assertEqual([Sequence('>name', 'ACTGactg')], f.remove(['name2','name3','name234']).contigs)
-        self.assertEqual([Sequence('>name2', 'NNNNNNNNNACTGNNNN'), Sequence('>name3', 'CTNACtacgatNNNNNNN')], f.remove(['name']).contigs)
+        self.assertEqual([Sequence('>name2', 'NNNNNNNNNACTGNNNN'), Sequence('>name3', 'CTNACtacgatNNNNNNN')], f.remove(['>name']).contigs)
+        self.assertEqual([Sequence('>name', 'ACTGactg')], f.remove(['>name2','>name3']).contigs)
+        self.assertEqual([Sequence('>name', 'ACTGactg')], f.remove(['>name2','>name3','>name234']).contigs)
+        self.assertEqual([Sequence('>name2', 'NNNNNNNNNACTGNNNN'), Sequence('>name3', 'CTNACtacgatNNNNNNN')], f.remove(['>name']).contigs)
     
     def test_statistics(self):
         cl = [Sequence('>name', 'ACTGactg'), Sequence('>name2', 'NNNNNNNNNACTGNNNN'), Sequence('>name3', 'CTNACtacgatNNNNNNN'), Sequence('>name4', 'CTNAC')]
@@ -187,7 +190,7 @@ class TestFa(unittest.TestCase):
         os.remove('f2.fa')
         os.remove('test.fa')
         pass
-    '''    
+        
     def test_conv_to_fq(self):
         cl = []
         test = 'ATGGAATCGGCTTTTAATACTGCAGGGGCGTTAAGTTGGCATGAACTCACAACCAATAATACCGAAGAGGCCATGCGCTTCTATGCTGAGATTTTTGGCTGGCACTTTAAAACCGTCAAAATGCCCCACGGTCACTATCACATTATTGAAAACGAGGGGATCAGCATTGGCGGAATTACCGACAGTTTAATCCCCACCCTTCCCTCACATTGGACTGGCTATATTACCGTTAACGATGTGGATCAAGTGGCTATCAGTGCTAAAAAACTCGGCGGTGACATTCTGTTTGGCCCTGAAGACATTCCAGAGGTGGGCCGTTTTTGTTGGATAAAAGACCCACAGGGCGCCATTATTGCGGCCATTAGCTATTTAAAACGTTGATGTAA'

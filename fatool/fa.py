@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-import re
+import re #gex as re
 import math
 from fatool import Sequence
 import logging
@@ -51,11 +51,10 @@ class Fa(object):
             
     @staticmethod       
     def load_content(content):
-        #print content
-        nc = content.split('>')
+        ncs = re.findall(re.compile('(?=(^>[\S\s]+?)(^>|\Z))',re.M), content)
         contigs_list = []
-        for r in nc[1:]:
-            contigs_list.append(Sequence('>'+r.split('\n', 1)[0].rstrip(), re.sub('^>.*\n', '', '>'+r.rstrip())))
+        for r in ncs:
+            contigs_list.append(Sequence(r[0].split('\n', 1)[0].rstrip(), re.sub('^>.*\n', '', r[0].rstrip())))
         return contigs_list
 
     def write(self, fafile):
@@ -127,6 +126,14 @@ class Fa(object):
             if not r.name in contigs_name_list:
                 new_contig_list.append(r)
         return Fa(new_contig_list, 'rem_'+self.name)
+        
+    def cut_min_len(self, min_len):
+        nc = []
+        for r in self.contigs:
+            if len(r) > min_len:
+                nc.append(r)
+        return Fa(nc,'cutof_'+str(min_len)+self.name)
+                
 
     def validate(self):
         '''
